@@ -161,6 +161,7 @@ namespace BuddhabrotCL
 
             UpdateBackBufferBitmap();
 
+            isRunning = false;
             startButton.Enabled = kernelButton.Enabled = platformDropDownButton.Enabled = true;
             stopButton.Enabled = false;
         }
@@ -423,6 +424,12 @@ namespace BuddhabrotCL
             bp.ImMin = -2f;
             bp.ImMax = 2f;
             propertyGrid.Refresh();
+
+            if (!isRunning)
+            {
+                UpdateBackBufferBitmap();
+                drawPanel.Invalidate();
+            }
         }
 
         private void propertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
