@@ -1,4 +1,6 @@
-﻿namespace BuddhabrotCL
+﻿using System.Runtime.InteropServices;
+
+namespace BuddhabrotCL
 {
     public enum FxFilter
     {
@@ -9,12 +11,14 @@
         Exp
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct Vector2
     {
         public uint X;
         public uint Y;
     };
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct RGBA
     {
         public uint r;

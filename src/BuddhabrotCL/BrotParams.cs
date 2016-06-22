@@ -14,7 +14,7 @@ namespace BuddhabrotCL
         [Category("Filter")]
         public float Overexposure { get; set; } = 1.0f;
         [Category("Filter")]
-        public FxFilter Filter { get; set; } = FxFilter.Log10;
+        public FxFilter Filter { get; set; } = FxFilter.Sqrt;
         [Category("Filter")]
         public float Limit_Red { get; set; } = .33f;
         [Category("Filter")]
@@ -24,10 +24,10 @@ namespace BuddhabrotCL
         [Description(@"ReMin; ReMax; ImMin; ImMax
 
 Try this:
-Deep region 1: -1.05f; -0.9f; -0.3f; -0.225f;
-Deep region 2: -1.22f; -1.0f; 0.16f; 0.32f;
-Smallbrot: -1.8f; -1.73f; -0.028f; 0.028f;
-Fullbrot: -2.0f; 2.0f; -2.0f; 2.0f;")]
+Deep region 1: -1.05; -0.9; -0.3; -0.225;
+Deep region 2: -1.22; -1.0; 0.16; 0.32;
+Smallbrot: -1.8; -1.73; -0.028; 0.028;
+Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         public string Region
         {
             get
@@ -59,6 +59,8 @@ Fullbrot: -2.0f; 2.0f; -2.0f; 2.0f;")]
         public float ImMin { get; set; } = -2f;
         [Category("View")]
         public float ImMax { get; set; } =  2f;
+        [Category("View")]
+        public bool IsUpdate { get; set; } = true;
 
         public float reMin;
         public float reMax;
@@ -74,7 +76,7 @@ Fullbrot: -2.0f; 2.0f; -2.0f; 2.0f;")]
         [Category("Fractal")]
         public int IterationsMin { get; set; } = 20;
         [Category("Fractal")]
-        public int IterationsMax { get; set; } = 200;
+        public int IterationsMax { get; set; } = 2000;
         public int iterMin;
         public int iterMax;
 

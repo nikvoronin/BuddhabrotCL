@@ -29,13 +29,10 @@
         private void InitializeComponent()
         {
             System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
-            System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
             System.Windows.Forms.ToolStripLabel toolStripLabel1;
-            System.Windows.Forms.ToolStripLabel toolStripLabel2;
             System.Windows.Forms.ToolStripLabel toolStripLabel3;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
-            this.cpsStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.coordStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.saveImageFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.propertyGrid = new System.Windows.Forms.PropertyGrid();
@@ -48,15 +45,13 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.kernelButton = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.rngButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.platformDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
             this.fullViewButton = new System.Windows.Forms.ToolStripButton();
+            this.refreshButton = new System.Windows.Forms.ToolStripButton();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
-            toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-            toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
             this.mainStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
@@ -68,28 +63,15 @@
             // 
             // toolStripStatusLabel2
             // 
-            toolStripStatusLabel2.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
             toolStripStatusLabel2.Name = "toolStripStatusLabel2";
             toolStripStatusLabel2.Size = new System.Drawing.Size(70, 20);
             toolStripStatusLabel2.Text = "(re; im) =";
-            // 
-            // toolStripStatusLabel1
-            // 
-            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new System.Drawing.Size(37, 20);
-            toolStripStatusLabel1.Text = "CPS:";
             // 
             // toolStripLabel1
             // 
             toolStripLabel1.Name = "toolStripLabel1";
             toolStripLabel1.Size = new System.Drawing.Size(54, 24);
             toolStripLabel1.Text = "Kernel:";
-            // 
-            // toolStripLabel2
-            // 
-            toolStripLabel2.Name = "toolStripLabel2";
-            toolStripLabel2.Size = new System.Drawing.Size(68, 24);
-            toolStripLabel2.Text = "Random:";
             // 
             // toolStripLabel3
             // 
@@ -100,20 +82,12 @@
             // mainStatusStrip
             // 
             this.mainStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            toolStripStatusLabel1,
-            this.cpsStatusLabel,
             toolStripStatusLabel2,
             this.coordStatusLabel});
             this.mainStatusStrip.Location = new System.Drawing.Point(0, 445);
             this.mainStatusStrip.Name = "mainStatusStrip";
             this.mainStatusStrip.Size = new System.Drawing.Size(842, 25);
             this.mainStatusStrip.TabIndex = 4;
-            // 
-            // cpsStatusLabel
-            // 
-            this.cpsStatusLabel.Name = "cpsStatusLabel";
-            this.cpsStatusLabel.Size = new System.Drawing.Size(17, 20);
-            this.cpsStatusLabel.Text = "0";
             // 
             // coordStatusLabel
             // 
@@ -135,6 +109,7 @@
             this.propertyGrid.Name = "propertyGrid";
             this.propertyGrid.Size = new System.Drawing.Size(219, 418);
             this.propertyGrid.TabIndex = 17;
+            this.propertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid_PropertyValueChanged);
             // 
             // splitContainer
             // 
@@ -231,29 +206,17 @@
             this.toolStripSeparator2,
             toolStripLabel1,
             this.kernelButton,
-            toolStripLabel2,
-            this.rngButton,
             this.toolStripSeparator3,
             toolStripLabel3,
             this.platformDropDownButton,
-            this.fullViewButton});
+            this.fullViewButton,
+            this.refreshButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             this.toolStrip1.Size = new System.Drawing.Size(842, 27);
             this.toolStrip1.TabIndex = 18;
             this.toolStrip1.Text = "toolStrip1";
-            // 
-            // rngButton
-            // 
-            this.rngButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.rngButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.rngButton.Image = ((System.Drawing.Image)(resources.GetObject("rngButton.Image")));
-            this.rngButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.rngButton.Name = "rngButton";
-            this.rngButton.Size = new System.Drawing.Size(23, 24);
-            this.rngButton.Text = "...";
-            this.rngButton.Click += new System.EventHandler(this.randomButton_Click);
             // 
             // toolStripSeparator3
             // 
@@ -274,6 +237,7 @@
             // fullViewButton
             // 
             this.fullViewButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.fullViewButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(255)))));
             this.fullViewButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.fullViewButton.Image = ((System.Drawing.Image)(resources.GetObject("fullViewButton.Image")));
             this.fullViewButton.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -281,6 +245,17 @@
             this.fullViewButton.Size = new System.Drawing.Size(70, 24);
             this.fullViewButton.Text = "Full view";
             this.fullViewButton.Click += new System.EventHandler(this.fullViewButton_Click);
+            // 
+            // refreshButton
+            // 
+            this.refreshButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.refreshButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.refreshButton.Image = ((System.Drawing.Image)(resources.GetObject("refreshButton.Image")));
+            this.refreshButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.refreshButton.Name = "refreshButton";
+            this.refreshButton.Size = new System.Drawing.Size(62, 24);
+            this.refreshButton.Text = "Refresh";
+            this.refreshButton.Click += new System.EventHandler(this.refreshButton_Click);
             // 
             // openFileDialog
             // 
@@ -300,7 +275,7 @@
             this.DoubleBuffered = true;
             this.ForeColor = System.Drawing.SystemColors.ControlText;
             this.Name = "MainForm";
-            this.Text = "BuddhabrotCL 1.4";
+            this.Text = "BuddhabrotCL";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.mainStatusStrip.ResumeLayout(false);
             this.mainStatusStrip.PerformLayout();
@@ -320,7 +295,6 @@
         private System.Windows.Forms.SaveFileDialog saveImageFileDialog;
         private CanvasPanel drawPanel;
         private System.Windows.Forms.ToolStripStatusLabel coordStatusLabel;
-        private System.Windows.Forms.ToolStripStatusLabel cpsStatusLabel;
         private System.Windows.Forms.PropertyGrid propertyGrid;
         private System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.ToolStripButton saveAsImageButton;
@@ -330,11 +304,11 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripButton kernelButton;
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton rngButton;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripDropDownButton platformDropDownButton;
         private System.Windows.Forms.ToolStripButton fullViewButton;
+        private System.Windows.Forms.ToolStripButton refreshButton;
     }
 }
 

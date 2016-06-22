@@ -41,12 +41,11 @@ float signum(float value)
 	return 0;
 }
 
-//Main kernel
 __kernel void buddhabrot(
-    const float realMin,
-    const float realMax,
-    const float imaginaryMin,
-    const float imaginaryMax,
+    const float reMin,
+    const float reMax,
+    const float imMin,
+    const float imMax,
     const uint  minIter,
     const uint  maxIter,
     const uint  width,
@@ -56,16 +55,25 @@ __kernel void buddhabrot(
     const uint4 maxColor,
     const uint isgrayscale,
 	const uint hackMode,
-    __global float2* rngBuffer,
-    __global uint4*  outputBuffer)
+    __global uint2* rngBuffer,
+	__global uint4*  outputBuffer)
 {
-    const float2 rand = rngBuffer[get_global_id(0)];
+	int id = get_global_id(0);
+	uint s1 = rngBuffer[id].x;
+	uint s2 = rngBuffer[id].y;
 
-    const float deltaReal = (realMax - realMin);
-    const float deltaImaginary = (imaginaryMax - imaginaryMin);
+	uint st = s1 ^ (s1 << 11);
+	s1 = s2;
+	s2 = s2 ^ (s2 >> 19) ^ (st ^ (st >> 18));
 
-	float shre = deltaReal / width / 2;
-	float shim = deltaImaginary / height / 2;
+	rngBuffer[id] = (uint2)(s1, s2);
+	float2 rand = (float2)((float)st / UINT_MAX, (float)s1 / UINT_MAX);
+
+    const float deltaRe = (reMax - reMin);
+    const float deltaIm = (imMax - imMin);
+
+	float shre = deltaRe / width / 2;
+	float shim = deltaIm / height / 2;
 
 	float2 c = (float2)(mix(-2, 2, rand.x), mix(-2, 2, rand.y));
 
@@ -92,45 +100,44 @@ __kernel void buddhabrot(
 			while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
 			{
 				z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0)) + c;
-				x1 = (width * (z.x - realMin) / deltaReal);
-				y1 = height - (height * (z.y - imaginaryMin) / deltaImaginary);
+				x1 = (width * (z.x - reMin) / deltaRe);
+				y1 = height - (height * (z.y - imMin) / deltaIm);
 
-				if (iter > minIter) {
-					if ((x1 > 0) && (y1 > 0) && (x1 < width) && (y1 < height))
-					{
-						atscr++;
+				if ((iter > minIter) && (x1 > 0) && (y1 > 0) && (x1 < width) && (y1 < height))
+				{
+					atscr++;
 
-						i = x1 + (y1 * width);
+					i = x1 + (y1 * width);
 
-						if (isgrayscale)
+					if (isgrayscale)
+						outputBuffer[i].x++;
+					else
+						if ((iter > minColor.x) && (iter < maxColor.x))
 							outputBuffer[i].x++;
 						else
-							if ((iter > minColor.x) && (iter < maxColor.x))
-								outputBuffer[i].x++;
+							if ((iter > minColor.y) && (iter < maxColor.y))
+								outputBuffer[i].y++;
 							else
-								if ((iter > minColor.y) && (iter < maxColor.y))
-									outputBuffer[i].y++;
-								else
-									if ((iter > minColor.z) && (iter < maxColor.z))
-										outputBuffer[i].z++;
-					} // if
-				} // if iter
+								if ((iter > minColor.z) && (iter < maxColor.z))
+									outputBuffer[i].z++;
+				} // if
 
 				iter++;
 			} // while
 		} // if
-
+		
+		// heuristics
 		if (!atscr)
 			break;
 		else {
 			if (lastatscr != atscr)
-				if (lastatscr < atscr)
+				if (atscr > lastatscr)
 					jMax += 10;
 				else
 				{
 					alpha += 1.57079632679;
-					shre *= signum((float)cos(alpha));
-					shim *= signum((float)sin(alpha));
+					shre *= signum(half_cos(alpha));
+					shim *= signum(half_sin(alpha));
 					jMax -= 10;
 				}
 
