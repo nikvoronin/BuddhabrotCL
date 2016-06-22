@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 
 using Cloo;
-using System.Diagnostics;
 
 namespace BuddhabrotCL
 {

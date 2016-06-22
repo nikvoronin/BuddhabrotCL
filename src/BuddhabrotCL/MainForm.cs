@@ -5,7 +5,6 @@ using System.Threading;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.IO;
-using System.Diagnostics;
 using Cloo;
 using System.Reflection;
 
