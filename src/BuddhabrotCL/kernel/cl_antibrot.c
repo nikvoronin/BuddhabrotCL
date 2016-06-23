@@ -113,8 +113,6 @@ __kernel void buddhabrot(
 
 			if ((iter > minIter) && (x1 > 0) && (y1 > 0) && (x1 < width) && (y1 < height))
 			{
-				atscr++;
-
 				i = x1 + (y1 * width);
 
 				if (isgrayscale)

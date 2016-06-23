@@ -48,7 +48,7 @@ namespace BuddhabrotCL
         }
 
 
-        Buddhabrot bbrot;
+        Buddhabrot bb;
 
         Bitmap bitmap = null;
         bool __should_update = false;
@@ -85,11 +85,11 @@ namespace BuddhabrotCL
 
             string kernelSource = File.ReadAllText(bbrotKernelPath);
 
-            bbrot = new Buddhabrot(cPlatform, kernelSource, bp);
+            bb = new Buddhabrot(cPlatform, kernelSource, bp);
             
-            bbrot.BuildKernels();
-            bbrot.AllocateBuffers();
-            bbrot.ConfigureKernel();
+            bb.BuildKernels();
+            bb.AllocateBuffers();
+            bb.ConfigureKernel();
             
             if (bitmap != null)
             {
@@ -157,10 +157,10 @@ namespace BuddhabrotCL
             {
                 hpet_start = hpet.ElapsedTicks;
 
-                bbrot.ExecuteKernel_Buddhabrot();
+                bb.ExecuteKernel_Buddhabrot();
                 if (token.IsCancellationRequested) break;
 
-                bbrot.ReadResult();
+                bb.ReadResult();
                 if (token.IsCancellationRequested) break;
 
                 hpet_ktime = hpet.ElapsedTicks - hpet_start;
@@ -215,16 +215,16 @@ namespace BuddhabrotCL
             float maxG = float.MinValue;
             float maxB = float.MinValue;
 
-            int l = bbrot.h_resultBuffer.Length;
+            int l = bb.h_resultBuf.Length;
             if (bp.isGrayscale)
                 for (int i = 0; i < l; i++)
-                    maxR = Math.Max(bbrot.h_resultBuffer[i].r, maxR);
+                    maxR = Math.Max(bb.h_resultBuf[i].r, maxR);
             else
                 for (int i = 0; i < l; i++)
                 {
-                    maxR = Math.Max(bbrot.h_resultBuffer[i].r, maxR);
-                    maxG = Math.Max(bbrot.h_resultBuffer[i].g, maxG);
-                    maxB = Math.Max(bbrot.h_resultBuffer[i].b, maxB);
+                    maxR = Math.Max(bb.h_resultBuf[i].r, maxR);
+                    maxG = Math.Max(bb.h_resultBuf[i].g, maxG);
+                    maxB = Math.Max(bb.h_resultBuf[i].b, maxB);
                 }
 
             int bitLen = bitmap.PixelFormat == PixelFormat.Format24bppRgb ? 3 : 4;
@@ -233,12 +233,12 @@ namespace BuddhabrotCL
                 region,
                 ImageLockMode.WriteOnly,
                 bitmap.PixelFormat);
-            byte[] bitmapBuffer = new byte[bitmapData.Stride * bitmapData.Height];
-            Marshal.Copy(bitmapData.Scan0, bitmapBuffer, 0, bitmapBuffer.Length);
+            byte[] bitmapBuf = new byte[bitmapData.Stride * bitmapData.Height];
+            Marshal.Copy(bitmapData.Scan0, bitmapBuf, 0, bitmapBuf.Length);
 
-            float scaleR = 255f * bp.Overexposure / Fx(maxR, bp.Factor);
-            float scaleG = bp.isGrayscale ? 0f : 255f * bp.Overexposure / Fx(maxG, bp.Factor);
-            float scaleB = bp.isGrayscale ? 0f : 255f * bp.Overexposure / Fx(maxB, bp.Factor);
+            float scaleR = 255f * bp.Exposure / Fx(maxR, bp.Factor);
+            float scaleG = bp.isGrayscale ? 0f : 255f * bp.Exposure / Fx(maxG, bp.Factor);
+            float scaleB = bp.isGrayscale ? 0f : 255f * bp.Exposure / Fx(maxB, bp.Factor);
 
             for (int y = 0; y < region.Height; y++)
             {
@@ -249,45 +249,71 @@ namespace BuddhabrotCL
 
                     byte r, g, b;
                     if (bp.isGrayscale)
-                        r = g = b = (byte)(scaleR * Fx(bbrot.h_resultBuffer[i].r, bp.Factor));
+                        r = g = b = ByteClamp(scaleR * Fx(bb.h_resultBuf[i].r, bp.Factor));
                     else
                     {
-                        r = (byte)(scaleR * Fx(bbrot.h_resultBuffer[i].r, bp.Factor));
-                        g = (byte)(scaleG * Fx(bbrot.h_resultBuffer[i].g, bp.Factor));
-                        b = (byte)(scaleB * Fx(bbrot.h_resultBuffer[i].b, bp.Factor));
+                        r = ByteClamp(scaleR * Fx(bb.h_resultBuf[i].r, bp.Factor));
+                        g = ByteClamp(scaleG * Fx(bb.h_resultBuf[i].g, bp.Factor));
+                        b = ByteClamp(scaleB * Fx(bb.h_resultBuf[i].b, bp.Factor));
                     }
 
                     switch(bp.Tint)
                     {
-                        case Tint.Red:
-                            bitmapBuffer[j + 0] = b;
-                            bitmapBuffer[j + 1] = g;
-                            bitmapBuffer[j + 2] = r;
+                        case Tint.BGR:
+                            bitmapBuf[j + 0] = b;
+                            bitmapBuf[j + 1] = g;
+                            bitmapBuf[j + 2] = r;
                             break;
-                        case Tint.Blue:
-                            bitmapBuffer[j + 0] = r;
-                            bitmapBuffer[j + 1] = g;
-                            bitmapBuffer[j + 2] = b;
+                        case Tint.RGB:
+                            bitmapBuf[j + 0] = r;
+                            bitmapBuf[j + 1] = g;
+                            bitmapBuf[j + 2] = b;
                             break;
-                        case Tint.Green:
-                            bitmapBuffer[j + 0] = b;
-                            bitmapBuffer[j + 1] = r;
-                            bitmapBuffer[j + 2] = g;
+                        case Tint.BRG:
+                            bitmapBuf[j + 0] = b;
+                            bitmapBuf[j + 1] = r;
+                            bitmapBuf[j + 2] = g;
+                            break;
+                        case Tint.RBG:
+                            bitmapBuf[j + 0] = r;
+                            bitmapBuf[j + 1] = b;
+                            bitmapBuf[j + 2] = g;
+                            break;
+                        case Tint.GRB:
+                            bitmapBuf[j + 0] = g;
+                            bitmapBuf[j + 1] = r;
+                            bitmapBuf[j + 2] = b;
+                            break;
+                        case Tint.GBR:
+                            bitmapBuf[j + 0] = g;
+                            bitmapBuf[j + 1] = b;
+                            bitmapBuf[j + 2] = r;
                             break;
                     }
 
                     if (bitLen == 4)
-                        bitmapBuffer[j + 3] = 255;
+                        bitmapBuf[j + 3] = 255;
                 } // for x
             } // for y
 
-            Marshal.Copy(bitmapBuffer, 0, bitmapData.Scan0, bitmapData.Stride * bitmapData.Height);
+            Marshal.Copy(bitmapBuf, 0, bitmapData.Scan0, bitmapData.Stride * bitmapData.Height);
             bitmap.UnlockBits(bitmapData);
 
             if (isDrag && isRunning)
                 DrawCursor();
 
             __lock_backbuffer = false;
+        }
+
+        private byte ByteClamp(float value)
+        {
+            if (value > 255f)
+                value = 255f;
+            else
+                if (value < 0f)
+                    value = 0f;
+
+            return (byte)value;
         }
 
         Rectangle GetCursorRect(Point cur)
@@ -354,7 +380,7 @@ namespace BuddhabrotCL
 
         private void drawPanel_MouseMove(object sender, MouseEventArgs e)
         {
-            if (bbrot == null)
+            if (bb == null)
                 return;
 
             int hNX = bp.width >> 1;
@@ -470,7 +496,8 @@ namespace BuddhabrotCL
                 {
                     case "Filter":
                     case "Factor":
-                    case "Overexposure":
+                    case "Exposure":
+                    case "Tint":
                         UpdateBackBufferBitmap();
                         drawPanel.Invalidate();
                         break;
@@ -484,6 +511,30 @@ namespace BuddhabrotCL
                 UpdateBackBufferBitmap();
                 drawPanel.Invalidate();
             }
+        }
+
+        public static void SetLabelColumnWidth(PropertyGrid grid, int width)
+        {
+            if (grid == null)
+                return;
+
+            FieldInfo fi = grid.GetType().GetField("gridView", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (fi == null)
+                return;
+
+            Control view = fi.GetValue(grid) as Control;
+            if (view == null)
+                return;
+
+            MethodInfo mi = view.GetType().GetMethod("MoveSplitterTo", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (mi == null)
+                return;
+            mi.Invoke(view, new object[] { width });
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            SetLabelColumnWidth(propertyGrid, propertyGrid.Width / 2);
         }
     }
 }

@@ -39,6 +39,7 @@
             this.saveImageFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.propertyGrid = new System.Windows.Forms.PropertyGrid();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
+            this.drawPanel = new BuddhabrotCL.CanvasPanel();
             this.saveAsImageButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.startButton = new System.Windows.Forms.ToolStripButton();
@@ -51,7 +52,6 @@
             this.fullViewButton = new System.Windows.Forms.ToolStripButton();
             this.refreshButton = new System.Windows.Forms.ToolStripButton();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.drawPanel = new BuddhabrotCL.CanvasPanel();
             toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
             toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
@@ -125,7 +125,7 @@
             this.propertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.propertyGrid.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid.Name = "propertyGrid";
-            this.propertyGrid.Size = new System.Drawing.Size(202, 608);
+            this.propertyGrid.Size = new System.Drawing.Size(216, 608);
             this.propertyGrid.TabIndex = 17;
             this.propertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid_PropertyValueChanged);
             // 
@@ -144,8 +144,19 @@
             // 
             this.splitContainer.Panel2.Controls.Add(this.propertyGrid);
             this.splitContainer.Size = new System.Drawing.Size(984, 608);
-            this.splitContainer.SplitterDistance = 778;
+            this.splitContainer.SplitterDistance = 764;
             this.splitContainer.TabIndex = 19;
+            // 
+            // drawPanel
+            // 
+            this.drawPanel.Location = new System.Drawing.Point(0, 0);
+            this.drawPanel.Name = "drawPanel";
+            this.drawPanel.Size = new System.Drawing.Size(200, 100);
+            this.drawPanel.TabIndex = 0;
+            this.drawPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.drawPanel_Paint);
+            this.drawPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseDown);
+            this.drawPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseMove);
+            this.drawPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseUp);
             // 
             // saveAsImageButton
             // 
@@ -270,17 +281,6 @@
             this.openFileDialog.Filter = "OpenCL C-files (*.c)|*.c|All files (*.*)|*.*";
             this.openFileDialog.RestoreDirectory = true;
             // 
-            // drawPanel
-            // 
-            this.drawPanel.Location = new System.Drawing.Point(0, 0);
-            this.drawPanel.Name = "drawPanel";
-            this.drawPanel.Size = new System.Drawing.Size(200, 100);
-            this.drawPanel.TabIndex = 0;
-            this.drawPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.drawPanel_Paint);
-            this.drawPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseDown);
-            this.drawPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseMove);
-            this.drawPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseUp);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -295,6 +295,7 @@
             this.Name = "MainForm";
             this.Text = "BuddhabrotCL";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.mainStatusStrip.ResumeLayout(false);
             this.mainStatusStrip.PerformLayout();
             this.splitContainer.Panel1.ResumeLayout(false);

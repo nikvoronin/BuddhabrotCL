@@ -13,9 +13,12 @@ namespace BuddhabrotCL
 
     public enum Tint
     {
-        Red,
-        Green,
-        Blue
+        BGR,
+        BRG,
+        RGB,
+        RBG,
+        GRB,
+        GBR
     }
 
     [StructLayout(LayoutKind.Sequential)]

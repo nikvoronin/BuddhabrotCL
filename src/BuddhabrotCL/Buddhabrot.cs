@@ -19,7 +19,7 @@ namespace BuddhabrotCL
 
         public ComputeBuffer<Vector4> cbuf_Rng;
         public ComputeBuffer<RGBA> cbuf_Result;
-        public RGBA[] h_resultBuffer;
+        public RGBA[] h_resultBuf;
         private GCHandle gc_resultBuffer;
 
         BrotParams bp;
@@ -35,8 +35,8 @@ namespace BuddhabrotCL
             clEvents = new ComputeEventList();
             clProgram = new ComputeProgram(clContext, new string[] { kernelSource });
 
-            h_resultBuffer = new RGBA[bp.width * bp.height];
-            gc_resultBuffer = GCHandle.Alloc(h_resultBuffer, GCHandleType.Pinned);
+            h_resultBuf = new RGBA[bp.width * bp.height];
+            gc_resultBuffer = GCHandle.Alloc(h_resultBuf, GCHandleType.Pinned);
         }
 
         public void BuildKernels()

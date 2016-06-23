@@ -6,25 +6,19 @@ namespace BuddhabrotCL
     public class BrotParams
     {
         [Category("OpenCL")]
+        [DisplayName("Workers Count")]
         public uint Workers { get; set; } = 1000000;
         public uint workers;
-
-        [Category("Fractal")]
-        public bool IsGrayscale { get; set; } = false;
-        public bool isGrayscale;
 
         [Category("Filter")]
         public float Factor { get; set; } = 1.0f;
         [Category("Filter")]
-        public float Overexposure { get; set; } = 1.0f;
+        public float Exposure { get; set; } = 1.0f;
         [Category("Filter")]
+        [DisplayName("Type")]
         public FxFilter Filter { get; set; } = FxFilter.Sqrt;
         [Category("Filter")]
-        public float Limit_Red { get; set; } = .33f;
-        [Category("Filter")]
-        public float Limit_Green { get; set; } = .66f;
-        [Category("Filter")]
-        public Tint Tint { get; set; } = Tint.Red;
+        public Tint Tint { get; set; } = Tint.BGR;
 
         [Category("View")]
         [Description(@"ReMin; ReMax; ImMin; ImMax
@@ -58,14 +52,19 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
             }
         }
         [Category("View")]
+        [DisplayName("Re Min")]
         public float ReMin { get; set; } = -2f;
         [Category("View")]
+        [DisplayName("Re Max")]
         public float ReMax { get; set; } =  2f;
         [Category("View")]
+        [DisplayName("Im Min")]
         public float ImMin { get; set; } = -2f;
         [Category("View")]
+        [DisplayName("Im Max")]
         public float ImMax { get; set; } =  2f;
         [Category("View")]
+        [DisplayName("Cyclic Update")]
         [Description("Switch on/off cyclic update of the image")]
         public bool UpdateCyclic { get; set; } = true;
 
@@ -75,15 +74,30 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         public float imMax;
 
         [Category("Fractal")]
+        [DisplayName("Grayscale Mode")]
+        public bool IsGrayscale { get; set; } = false;
+        public bool isGrayscale;
+        [Category("Fractal")]
+        [DisplayName("Floor Low")]
+        public float Limit_Lo { get; set; } = .33f;
+        [Category("Fractal")]
+        [DisplayName("Floor Mid")]
+        public float Limit_Mid { get; set; } = .66f;
+
+        [Category("Fractal")]
+        [DisplayName("Escape Orbit")]
         public float EscapeOrbit { get; set; } = 4f;
         public float escapeOrbit;
+        [DisplayName("Region Mode")]
         [Category("Fractal")]
         [Description("Calculate points inside view region only. Classic kernel only!")]
         public bool IsHackMode { get; set; }
 
         [Category("Fractal")]
+        [DisplayName("Iterations Min")]
         public int IterationsMin { get; set; } = 20;
         [Category("Fractal")]
+        [DisplayName("Iterations Max")]
         public int IterationsMax { get; set; } = 2000;
         public int iterMin;
         public int iterMax;
@@ -112,10 +126,10 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         public void RecalculateColors()
         {
             minColor.r = (uint)(iterMin);
-            maxColor.r = (uint)(iterMin + (iterMax - iterMin) * Limit_Red);
+            maxColor.r = (uint)(iterMin + (iterMax - iterMin) * Limit_Lo);
 
             minColor.g = maxColor.r;
-            maxColor.g = (uint)(iterMin + (iterMax - iterMin) * Limit_Green);
+            maxColor.g = (uint)(iterMin + (iterMax - iterMin) * Limit_Mid);
 
             minColor.b = maxColor.g;
             maxColor.b = (uint)(iterMax);
