@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.IO;
 using Cloo;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace BuddhabrotCL
 {
@@ -18,6 +19,7 @@ namespace BuddhabrotCL
         ComputePlatform cPlatform = null;
         Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.White));
         bool isRunning = false;
+        Stopwatch hpet = new Stopwatch();
 
         public MainForm()
         {
@@ -70,6 +72,7 @@ namespace BuddhabrotCL
             bp.imMin = bp.ImMin;
             bp.imMax = bp.ImMax;
 
+            bp.workers = bp.Workers;
 
             bp.RecalculateColors();
         }
@@ -110,6 +113,7 @@ namespace BuddhabrotCL
             drawThread.IsBackground = false;
 
             isRunning = true;
+            hpet.Restart();
             workThread.Start();
             drawThread.Start();
         }
@@ -121,7 +125,7 @@ namespace BuddhabrotCL
                 if (__should_update && ui != null)
                 {
                     __should_update = false;
-                    if (bp.IsUpdate)
+                    if (bp.UpdateCyclic)
                         UpdateBackBufferBitmap();
 
                     if (token.IsCancellationRequested)
@@ -130,7 +134,13 @@ namespace BuddhabrotCL
                     ui.Send(
                         (object o) =>
                         {
-                            if (bp.IsUpdate)
+                            if (hpet_ktime > 0)
+                            {
+                                long ktime = hpet_ktime / TimeSpan.TicksPerMillisecond;
+                                kernelTimeStatusLabel.Text = $"{ktime}ms";
+                            }
+
+                            if (bp.UpdateCyclic)
                                 drawPanel.Invalidate();
                         }, null);
                 } // if
@@ -139,16 +149,21 @@ namespace BuddhabrotCL
             } // while
         }
 
+        long hpet_ktime = 0;
+        long hpet_start = 0;
         private void Generate(SynchronizationContext ui, CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
+                hpet_start = hpet.ElapsedTicks;
+
                 bbrot.ExecuteKernel_Buddhabrot();
                 if (token.IsCancellationRequested) break;
 
                 bbrot.ReadResult();
                 if (token.IsCancellationRequested) break;
 
+                hpet_ktime = hpet.ElapsedTicks - hpet_start;
                 __should_update = true;
             }
         }
@@ -162,6 +177,7 @@ namespace BuddhabrotCL
             UpdateBackBufferBitmap();
 
             isRunning = false;
+            hpet.Stop();
             startButton.Enabled = kernelButton.Enabled = platformDropDownButton.Enabled = true;
             stopButton.Enabled = false;
         }
@@ -241,9 +257,24 @@ namespace BuddhabrotCL
                         b = (byte)(scaleB * Fx(bbrot.h_resultBuffer[i].b, bp.Factor));
                     }
 
-                    bitmapBuffer[j + 0] = b;
-                    bitmapBuffer[j + 1] = g;
-                    bitmapBuffer[j + 2] = r;
+                    switch(bp.Tint)
+                    {
+                        case Tint.Red:
+                            bitmapBuffer[j + 0] = b;
+                            bitmapBuffer[j + 1] = g;
+                            bitmapBuffer[j + 2] = r;
+                            break;
+                        case Tint.Blue:
+                            bitmapBuffer[j + 0] = r;
+                            bitmapBuffer[j + 1] = g;
+                            bitmapBuffer[j + 2] = b;
+                            break;
+                        case Tint.Green:
+                            bitmapBuffer[j + 0] = b;
+                            bitmapBuffer[j + 1] = r;
+                            bitmapBuffer[j + 2] = g;
+                            break;
+                    }
 
                     if (bitLen == 4)
                         bitmapBuffer[j + 3] = 255;

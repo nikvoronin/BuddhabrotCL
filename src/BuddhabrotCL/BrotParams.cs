@@ -5,6 +5,10 @@ namespace BuddhabrotCL
 {
     public class BrotParams
     {
+        [Category("OpenCL")]
+        public uint Workers { get; set; } = 1000000;
+        public uint workers;
+
         [Category("Fractal")]
         public bool IsGrayscale { get; set; } = false;
         public bool isGrayscale;
@@ -19,6 +23,8 @@ namespace BuddhabrotCL
         public float Limit_Red { get; set; } = .33f;
         [Category("Filter")]
         public float Limit_Green { get; set; } = .66f;
+        [Category("Filter")]
+        public Tint Tint { get; set; } = Tint.Red;
 
         [Category("View")]
         [Description(@"ReMin; ReMax; ImMin; ImMax
@@ -60,7 +66,8 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         [Category("View")]
         public float ImMax { get; set; } =  2f;
         [Category("View")]
-        public bool IsUpdate { get; set; } = true;
+        [Description("Switch on/off cyclic update of the image")]
+        public bool UpdateCyclic { get; set; } = true;
 
         public float reMin;
         public float reMax;
@@ -71,6 +78,7 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         public float EscapeOrbit { get; set; } = 4f;
         public float escapeOrbit;
         [Category("Fractal")]
+        [Description("Calculate points inside view region only. Classic kernel only!")]
         public bool IsHackMode { get; set; }
 
         [Category("Fractal")]
@@ -79,8 +87,6 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         public int IterationsMax { get; set; } = 2000;
         public int iterMin;
         public int iterMax;
-
-
 
         [Category("Image")]
         public uint Size

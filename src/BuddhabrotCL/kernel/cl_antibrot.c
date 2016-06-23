@@ -34,6 +34,13 @@ bool isInMSet(
     return true;
 }
 
+float signum(float value)
+{
+	if (value > 0) return 1;
+	if (value < 0) return -1;
+	return 0;
+}
+
 __kernel void buddhabrot(
     const float reMin,
     const float reMax,
@@ -48,20 +55,38 @@ __kernel void buddhabrot(
     const uint4 maxColor,
     const uint isgrayscale,
 	const uint hackMode,
-    __global uint2* rngBuffer,
+    __global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
 	int id = get_global_id(0);
+
+	// taus88
 	uint s1 = rngBuffer[id].x;
 	uint s2 = rngBuffer[id].y;
+	uint s3 = rngBuffer[id].z;
 
-	uint st = s1 ^ (s1 << 11);
-	s1 = s2;
-	s2 = s2 ^ (s2 >> 19) ^ (st ^ (st >> 18));
+	float2 rand;
+	
+	uint b;
+	b = (((s1 << 13) ^ s1) >> 19);
+	s1 = (((s1 & 4294967294) << 12) ^ b);
+	b = (((s2 << 2) ^ s2) >> 25);
+	s2 = (((s2 & 4294967288) << 4) ^ b);
+	b = (((s3 << 3) ^ s3) >> 11);
+	s3 = (((s3 & 4294967280) << 17) ^ b);
 
-	rngBuffer[id] = (uint2)(s1, s2);
+	rand.x = (float)((s1 ^ s2 ^ s3) * 2.3283064365e-10);
 
-	float2 rand = (float2)((float)st / UINT_MAX, (float)s1 / UINT_MAX);
+	b = (((s1 << 13) ^ s1) >> 19);
+	s1 = (((s1 & 4294967294) << 12) ^ b);
+	b = (((s2 << 2) ^ s2) >> 25);
+	s2 = (((s2 & 4294967288) << 4) ^ b);
+	b = (((s3 << 3) ^ s3) >> 11);
+	s3 = (((s3 & 4294967280) << 17) ^ b);
+
+	rand.y = (float)((s1 ^ s2 ^ s3) * 2.3283064365e-10);
+
+	rngBuffer[id] = (uint4)(s1, s2, s3, b);
 
     const float deltaRe = (reMax - reMin);
     const float deltaIm = (imMax - imMin);
@@ -88,6 +113,8 @@ __kernel void buddhabrot(
 
 			if ((iter > minIter) && (x1 > 0) && (y1 > 0) && (x1 < width) && (y1 < height))
 			{
+				atscr++;
+
 				i = x1 + (y1 * width);
 
 				if (isgrayscale)

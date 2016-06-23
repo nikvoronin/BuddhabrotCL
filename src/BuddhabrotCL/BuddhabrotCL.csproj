@@ -89,12 +89,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\cl_antibrot.c">
+    <None Include="kernel\cl_anticubic.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\cl_anticubic.c">
+    <None Include="kernel\cl_antibrot.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

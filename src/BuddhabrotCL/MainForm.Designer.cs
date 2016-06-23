@@ -31,13 +31,14 @@
             System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
             System.Windows.Forms.ToolStripLabel toolStripLabel1;
             System.Windows.Forms.ToolStripLabel toolStripLabel3;
+            System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
+            this.kernelTimeStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.coordStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.saveImageFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.propertyGrid = new System.Windows.Forms.PropertyGrid();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
-            this.drawPanel = new BuddhabrotCL.CanvasPanel();
             this.saveAsImageButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.startButton = new System.Windows.Forms.ToolStripButton();
@@ -50,9 +51,11 @@
             this.fullViewButton = new System.Windows.Forms.ToolStripButton();
             this.refreshButton = new System.Windows.Forms.ToolStripButton();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.drawPanel = new BuddhabrotCL.CanvasPanel();
             toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
             toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
+            toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
@@ -63,6 +66,7 @@
             // 
             // toolStripStatusLabel2
             // 
+            toolStripStatusLabel2.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
             toolStripStatusLabel2.Name = "toolStripStatusLabel2";
             toolStripStatusLabel2.Size = new System.Drawing.Size(70, 20);
             toolStripStatusLabel2.Text = "(re; im) =";
@@ -79,15 +83,29 @@
             toolStripLabel3.Size = new System.Drawing.Size(69, 24);
             toolStripLabel3.Text = "Platform:";
             // 
+            // toolStripStatusLabel1
+            // 
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new System.Drawing.Size(88, 20);
+            toolStripStatusLabel1.Text = "Kernel time:";
+            // 
             // mainStatusStrip
             // 
             this.mainStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            toolStripStatusLabel1,
+            this.kernelTimeStatusLabel,
             toolStripStatusLabel2,
             this.coordStatusLabel});
-            this.mainStatusStrip.Location = new System.Drawing.Point(0, 445);
+            this.mainStatusStrip.Location = new System.Drawing.Point(0, 635);
             this.mainStatusStrip.Name = "mainStatusStrip";
-            this.mainStatusStrip.Size = new System.Drawing.Size(842, 25);
+            this.mainStatusStrip.Size = new System.Drawing.Size(984, 25);
             this.mainStatusStrip.TabIndex = 4;
+            // 
+            // kernelTimeStatusLabel
+            // 
+            this.kernelTimeStatusLabel.Name = "kernelTimeStatusLabel";
+            this.kernelTimeStatusLabel.Size = new System.Drawing.Size(55, 20);
+            this.kernelTimeStatusLabel.Text = "0.00ms";
             // 
             // coordStatusLabel
             // 
@@ -107,7 +125,7 @@
             this.propertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.propertyGrid.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid.Name = "propertyGrid";
-            this.propertyGrid.Size = new System.Drawing.Size(219, 418);
+            this.propertyGrid.Size = new System.Drawing.Size(202, 608);
             this.propertyGrid.TabIndex = 17;
             this.propertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid_PropertyValueChanged);
             // 
@@ -125,20 +143,9 @@
             // splitContainer.Panel2
             // 
             this.splitContainer.Panel2.Controls.Add(this.propertyGrid);
-            this.splitContainer.Size = new System.Drawing.Size(842, 418);
-            this.splitContainer.SplitterDistance = 619;
+            this.splitContainer.Size = new System.Drawing.Size(984, 608);
+            this.splitContainer.SplitterDistance = 778;
             this.splitContainer.TabIndex = 19;
-            // 
-            // drawPanel
-            // 
-            this.drawPanel.Location = new System.Drawing.Point(0, 0);
-            this.drawPanel.Name = "drawPanel";
-            this.drawPanel.Size = new System.Drawing.Size(200, 100);
-            this.drawPanel.TabIndex = 0;
-            this.drawPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.drawPanel_Paint);
-            this.drawPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseDown);
-            this.drawPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseMove);
-            this.drawPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseUp);
             // 
             // saveAsImageButton
             // 
@@ -214,7 +221,7 @@
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-            this.toolStrip1.Size = new System.Drawing.Size(842, 27);
+            this.toolStrip1.Size = new System.Drawing.Size(984, 27);
             this.toolStrip1.TabIndex = 18;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -263,12 +270,23 @@
             this.openFileDialog.Filter = "OpenCL C-files (*.c)|*.c|All files (*.*)|*.*";
             this.openFileDialog.RestoreDirectory = true;
             // 
+            // drawPanel
+            // 
+            this.drawPanel.Location = new System.Drawing.Point(0, 0);
+            this.drawPanel.Name = "drawPanel";
+            this.drawPanel.Size = new System.Drawing.Size(200, 100);
+            this.drawPanel.TabIndex = 0;
+            this.drawPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.drawPanel_Paint);
+            this.drawPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseDown);
+            this.drawPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseMove);
+            this.drawPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseUp);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(842, 470);
+            this.ClientSize = new System.Drawing.Size(984, 660);
             this.Controls.Add(this.splitContainer);
             this.Controls.Add(this.mainStatusStrip);
             this.Controls.Add(this.toolStrip1);
@@ -309,6 +327,7 @@
         private System.Windows.Forms.ToolStripDropDownButton platformDropDownButton;
         private System.Windows.Forms.ToolStripButton fullViewButton;
         private System.Windows.Forms.ToolStripButton refreshButton;
+        private System.Windows.Forms.ToolStripStatusLabel kernelTimeStatusLabel;
     }
 }
 

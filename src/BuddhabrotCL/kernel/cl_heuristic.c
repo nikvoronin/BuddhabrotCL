@@ -55,19 +55,38 @@ __kernel void buddhabrot(
     const uint4 maxColor,
     const uint isgrayscale,
 	const uint hackMode,
-    __global uint2* rngBuffer,
+	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
 	int id = get_global_id(0);
+
+	// taus88
 	uint s1 = rngBuffer[id].x;
 	uint s2 = rngBuffer[id].y;
+	uint s3 = rngBuffer[id].z;
 
-	uint st = s1 ^ (s1 << 11);
-	s1 = s2;
-	s2 = s2 ^ (s2 >> 19) ^ (st ^ (st >> 18));
+	float2 rand;
 
-	rngBuffer[id] = (uint2)(s1, s2);
-	float2 rand = (float2)((float)st / UINT_MAX, (float)s1 / UINT_MAX);
+	uint b;
+	b = (((s1 << 13) ^ s1) >> 19);
+	s1 = (((s1 & 4294967294) << 12) ^ b);
+	b = (((s2 << 2) ^ s2) >> 25);
+	s2 = (((s2 & 4294967288) << 4) ^ b);
+	b = (((s3 << 3) ^ s3) >> 11);
+	s3 = (((s3 & 4294967280) << 17) ^ b);
+
+	rand.x = (float)((s1 ^ s2 ^ s3) * 2.3283064365e-10);
+
+	b = (((s1 << 13) ^ s1) >> 19);
+	s1 = (((s1 & 4294967294) << 12) ^ b);
+	b = (((s2 << 2) ^ s2) >> 25);
+	s2 = (((s2 & 4294967288) << 4) ^ b);
+	b = (((s3 << 3) ^ s3) >> 11);
+	s3 = (((s3 & 4294967280) << 17) ^ b);
+
+	rand.y = (float)((s1 ^ s2 ^ s3) * 2.3283064365e-10);
+
+	rngBuffer[id] = (uint4)(s1, s2, s3, b);
 
     const float deltaRe = (reMax - reMin);
     const float deltaIm = (imMax - imMin);
@@ -135,7 +154,7 @@ __kernel void buddhabrot(
 					jMax += 10;
 				else
 				{
-					alpha += 1.57079632679;
+					alpha += 1.047197551196597;
 					shre *= signum(half_cos(alpha));
 					shim *= signum(half_sin(alpha));
 					jMax -= 10;

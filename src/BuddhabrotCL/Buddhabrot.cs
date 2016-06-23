@@ -17,12 +17,11 @@ namespace BuddhabrotCL
         public ComputeCommandQueue clCommands;
         public ComputeEventList clEvents;
 
-        public ComputeBuffer<Vector2> cbuf_Rng;
+        public ComputeBuffer<Vector4> cbuf_Rng;
         public ComputeBuffer<RGBA> cbuf_Result;
         public RGBA[] h_resultBuffer;
         private GCHandle gc_resultBuffer;
 
-        public static int workerCount = 1000000;
         BrotParams bp;
 
         public Buddhabrot(ComputePlatform cPlatform, string kernelSource, BrotParams bp)
@@ -50,12 +49,19 @@ namespace BuddhabrotCL
         {
             Random rnd = new Random((int)DateTime.UtcNow.Ticks);
 
-            Vector2[] seeds = new Vector2[workerCount];
-            for (int i = 0; i < workerCount; i++)
-                seeds[i] = new Vector2 { X = (ushort)rnd.Next(), Y = (ushort)rnd.Next() };
+            Vector4[] seeds = new Vector4[bp.workers];
+            for (int i = 0; i < bp.workers; i++)
+                seeds[i] =
+                    new Vector4
+                    {
+                        x = (ushort)rnd.Next(),
+                        y = (ushort)rnd.Next(),
+                        z = (ushort)rnd.Next(),
+                        w = (ushort)rnd.Next()
+                    };
 
             cbuf_Rng =
-                new ComputeBuffer<Vector2>(
+                new ComputeBuffer<Vector4>(
                     clContext,
                     ComputeMemoryFlags.ReadOnly | ComputeMemoryFlags.CopyHostPointer,
                     seeds);
@@ -88,7 +94,7 @@ namespace BuddhabrotCL
 
         public void ExecuteKernel_Buddhabrot()
         {
-            clCommands.Execute(clkBbrot, null, new long[] { workerCount }, null, clEvents);
+            clCommands.Execute(clkBbrot, null, new long[] { bp.workers }, null, clEvents);
         }
 
 

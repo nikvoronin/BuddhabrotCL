@@ -11,11 +11,20 @@ namespace BuddhabrotCL
         Exp
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct Vector2
+    public enum Tint
     {
-        public uint X;
-        public uint Y;
+        Red,
+        Green,
+        Blue
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vector4
+    {
+        public uint x;
+        public uint y;
+        public uint z;
+        public uint w;
     };
 
     [StructLayout(LayoutKind.Sequential)]
