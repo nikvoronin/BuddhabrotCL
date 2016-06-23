@@ -80,17 +80,30 @@ namespace BuddhabrotCL
         private void startButton_Click(object sender, EventArgs e)
         {
             TransferBBrotParameters();
+
+            try
+            {
+                string kernelSource = File.ReadAllText(bbrotKernelPath);
+
+                bb = new Buddhabrot(cPlatform, kernelSource, bp);
+
+                bb.BuildKernels();
+                bb.AllocateBuffers();
+                bb.ConfigureKernel();
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Sorry, can't build kernel!",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
             startButton.Enabled = kernelButton.Enabled = platformDropDownButton.Enabled = false;
             stopButton.Enabled = true;
 
-            string kernelSource = File.ReadAllText(bbrotKernelPath);
-
-            bb = new Buddhabrot(cPlatform, kernelSource, bp);
-            
-            bb.BuildKernels();
-            bb.AllocateBuffers();
-            bb.ConfigureKernel();
-            
             if (bitmap != null)
             {
                 bitmap.Dispose();
@@ -137,8 +150,14 @@ namespace BuddhabrotCL
                             if (hpet_ktime > 0)
                             {
                                 long ktime = hpet_ktime / TimeSpan.TicksPerMillisecond;
-                                kernelTimeStatusLabel.Text = $"{ktime}ms";
+                                if (ktime >= 1000)
+                                    kernelTimeStatusLabel.Text = $"{(ktime/1000f).ToString("0.00")}s";
+                                else
+                                    kernelTimeStatusLabel.Text = $"{ktime}ms";
                             }
+
+                            TimeSpan ts = TimeSpan.FromMilliseconds(hpet.ElapsedMilliseconds);
+                            renderTimeStatusLabel.Text = $"{ts.ToString(@"dd\ hh\:mm\:ss")}";
 
                             if (bp.UpdateCyclic)
                                 drawPanel.Invalidate();
@@ -364,8 +383,19 @@ namespace BuddhabrotCL
 
         private void saveAsImageButton_Click(object sender, EventArgs e)
         {
+            bool uc = bp.UpdateCyclic;
+            bp.UpdateCyclic = false;
+
+            if (!isRunning)
+            {
+                UpdateBackBufferBitmap();
+                drawPanel.Invalidate();
+            }
+
             if (saveImageFileDialog.ShowDialog() == DialogResult.OK)
                 bitmap.Save(saveImageFileDialog.FileName);
+
+            bp.UpdateCyclic = uc;
         }
 
         private void drawPanel_Paint(object sender, PaintEventArgs e)
@@ -502,15 +532,6 @@ namespace BuddhabrotCL
                         drawPanel.Invalidate();
                         break;
                 }
-        }
-
-        private void refreshButton_Click(object sender, EventArgs e)
-        {
-            if(!isRunning)
-            {
-                UpdateBackBufferBitmap();
-                drawPanel.Invalidate();
-            }
         }
 
         public static void SetLabelColumnWidth(PropertyGrid grid, int width)

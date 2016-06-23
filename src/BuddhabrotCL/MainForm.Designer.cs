@@ -32,9 +32,11 @@
             System.Windows.Forms.ToolStripLabel toolStripLabel1;
             System.Windows.Forms.ToolStripLabel toolStripLabel3;
             System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+            System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.kernelTimeStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.renderTimeStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.coordStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.saveImageFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.propertyGrid = new System.Windows.Forms.PropertyGrid();
@@ -50,12 +52,12 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.platformDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
             this.fullViewButton = new System.Windows.Forms.ToolStripButton();
-            this.refreshButton = new System.Windows.Forms.ToolStripButton();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
             toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
             toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
@@ -68,8 +70,8 @@
             // 
             toolStripStatusLabel2.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
             toolStripStatusLabel2.Name = "toolStripStatusLabel2";
-            toolStripStatusLabel2.Size = new System.Drawing.Size(70, 20);
-            toolStripStatusLabel2.Text = "(re; im) =";
+            toolStripStatusLabel2.Size = new System.Drawing.Size(74, 20);
+            toolStripStatusLabel2.Text = "[Re; Im] =";
             // 
             // toolStripLabel1
             // 
@@ -89,11 +91,20 @@
             toolStripStatusLabel1.Size = new System.Drawing.Size(88, 20);
             toolStripStatusLabel1.Text = "Kernel time:";
             // 
+            // toolStripStatusLabel
+            // 
+            toolStripStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
+            toolStripStatusLabel.Name = "toolStripStatusLabel";
+            toolStripStatusLabel.Size = new System.Drawing.Size(93, 20);
+            toolStripStatusLabel.Text = "Render time:";
+            // 
             // mainStatusStrip
             // 
             this.mainStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             toolStripStatusLabel1,
             this.kernelTimeStatusLabel,
+            toolStripStatusLabel,
+            this.renderTimeStatusLabel,
             toolStripStatusLabel2,
             this.coordStatusLabel});
             this.mainStatusStrip.Location = new System.Drawing.Point(0, 635);
@@ -104,14 +115,20 @@
             // kernelTimeStatusLabel
             // 
             this.kernelTimeStatusLabel.Name = "kernelTimeStatusLabel";
-            this.kernelTimeStatusLabel.Size = new System.Drawing.Size(55, 20);
-            this.kernelTimeStatusLabel.Text = "0.00ms";
+            this.kernelTimeStatusLabel.Size = new System.Drawing.Size(34, 20);
+            this.kernelTimeStatusLabel.Text = "-ms";
+            // 
+            // renderTimeStatusLabel
+            // 
+            this.renderTimeStatusLabel.Name = "renderTimeStatusLabel";
+            this.renderTimeStatusLabel.Size = new System.Drawing.Size(67, 20);
+            this.renderTimeStatusLabel.Text = "-- --:--:--";
             // 
             // coordStatusLabel
             // 
             this.coordStatusLabel.Name = "coordStatusLabel";
-            this.coordStatusLabel.Size = new System.Drawing.Size(32, 20);
-            this.coordStatusLabel.Text = "0; 0";
+            this.coordStatusLabel.Size = new System.Drawing.Size(28, 20);
+            this.coordStatusLabel.Text = "-; -";
             // 
             // saveImageFileDialog
             // 
@@ -227,8 +244,7 @@
             this.toolStripSeparator3,
             toolStripLabel3,
             this.platformDropDownButton,
-            this.fullViewButton,
-            this.refreshButton});
+            this.fullViewButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
@@ -263,17 +279,6 @@
             this.fullViewButton.Size = new System.Drawing.Size(70, 24);
             this.fullViewButton.Text = "Full view";
             this.fullViewButton.Click += new System.EventHandler(this.fullViewButton_Click);
-            // 
-            // refreshButton
-            // 
-            this.refreshButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.refreshButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.refreshButton.Image = ((System.Drawing.Image)(resources.GetObject("refreshButton.Image")));
-            this.refreshButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.refreshButton.Name = "refreshButton";
-            this.refreshButton.Size = new System.Drawing.Size(62, 24);
-            this.refreshButton.Text = "Refresh";
-            this.refreshButton.Click += new System.EventHandler(this.refreshButton_Click);
             // 
             // openFileDialog
             // 
@@ -327,8 +332,8 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripDropDownButton platformDropDownButton;
         private System.Windows.Forms.ToolStripButton fullViewButton;
-        private System.Windows.Forms.ToolStripButton refreshButton;
         private System.Windows.Forms.ToolStripStatusLabel kernelTimeStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel renderTimeStatusLabel;
     }
 }
 
