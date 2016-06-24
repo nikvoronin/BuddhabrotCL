@@ -87,13 +87,38 @@ namespace BuddhabrotCL
             }
         }
 
+        private AppStatus Status
+        {
+            set
+            {
+                switch(value)
+                {
+                    case AppStatus.Finishing:
+                        statusLabel.Text = "Finishing...";
+                        statusLabel.BackColor = Color.Yellow;
+                        break;
+                    case AppStatus.Loading:
+                        statusLabel.Text = "Loading...";
+                        statusLabel.BackColor = SystemColors.Control;
+                        break;
+                    case AppStatus.Ready:
+                        statusLabel.Text = "Ready";
+                        statusLabel.BackColor = SystemColors.Control;
+                        break;
+                    case AppStatus.Rendering:
+                        statusLabel.Text = "Rendering";
+                        statusLabel.BackColor = Color.LightGreen;
+                        break;
+                }
+            }
+        }
+
         private string KernelFilename
         {
             set
             {
                 kernelFilename = value;
                 string filename = new FileInfo(kernelFilename).Name;
-                kernelStatusLabel.Text = $"Kernel: {filename}";
                 Text = $"{filename} - {AppFullName}";
             }
         }
@@ -148,6 +173,7 @@ namespace BuddhabrotCL
         private void startButton_Click(object sender, EventArgs e)
         {
             TransferBBrotParameters();
+            propertyGrid.Refresh();
 
             try
             {
@@ -194,19 +220,21 @@ namespace BuddhabrotCL
 
             SynchronizationContext ui = SynchronizationContext.Current;
 
-            thGenerator = new Thread(() => Generate(ui, cts.Token));
+            thGenerator = new Thread(() => Thread_Generator(ui, cts.Token));
             thGenerator.IsBackground = false;
 
-            thPainter = new Thread(() => DrawResultBuffer(ui, cts.Token));
+            thPainter = new Thread(() => Thread_Painter(ui, cts.Token));
             thPainter.IsBackground = true;
 
             isRunning = true;
             hpet.Restart();
             thGenerator.Start();
             thPainter.Start();
+
+            Status = AppStatus.Rendering;
         }
 
-        private void DrawResultBuffer(SynchronizationContext ui, CancellationToken token)
+        private void Thread_Painter(SynchronizationContext ui, CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
@@ -221,16 +249,18 @@ namespace BuddhabrotCL
                         return;
 
                     ui.Send(
-                        (object o) =>
-                        {
+                        (object o) => {
                             if (hpet_ktime > 0)
                             {
                                 long ktime = hpet_ktime / TimeSpan.TicksPerMillisecond;
                                 if (ktime >= 1000)
-                                    kernelTimeStatusLabel.Text = $"Core: {(ktime/1000f).ToString("0.00")}s";
+                                    kernelTimeStatusLabel.Text = $"Core: {(ktime / 1000f).ToString("0.00")}s {hpet_count}*";
                                 else
-                                    kernelTimeStatusLabel.Text = $"Core: {ktime}ms";
+                                    kernelTimeStatusLabel.Text = $"Core: {ktime}ms {hpet_count}*";
                             }
+
+                            memoryStatusLabel.Text = $"Memory: {(Process.GetCurrentProcess().WorkingSet64 / 1024.0 / 1024.0).ToString("0.00")}Mb";
+                            hpet_count = 0;
 
                             TimeSpan ts = TimeSpan.FromMilliseconds(hpet.ElapsedMilliseconds);
                             renderTimeStatusLabel.Text = $"Rendering: {ts.ToString(@"dd\ hh\:mm\:ss")}";
@@ -240,14 +270,15 @@ namespace BuddhabrotCL
                         }, null);
                 } // if
 
-                if(hpet.ElapsedTicks - hpet_ubbb_st > 2500000000)
-                    Thread.Sleep(250);
+                if(hpet.ElapsedTicks - hpet_ubbb_st < 5000000000)
+                    Thread.Sleep(500);
             } // while
         }
 
         long hpet_ktime = 0;
         long hpet_start = 0;
-        private void Generate(SynchronizationContext ui, CancellationToken token)
+        long hpet_count = 0;
+        private void Thread_Generator(SynchronizationContext ui, CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
@@ -260,13 +291,18 @@ namespace BuddhabrotCL
                 if (token.IsCancellationRequested) break;
 
                 hpet_ktime = hpet.ElapsedTicks - hpet_start;
+                hpet_count++;
                 __should_update = true;
+                Thread.Sleep(0);
             }
         }
 
         private async void stopButton_Click(object sender, EventArgs e)
         {
             cts?.Cancel();
+            Status = AppStatus.Finishing;
+            stopButton.Enabled = stopMenuItem.Enabled = false;
+
             await Task.Run(() => { while (thPainter.IsAlive) Thread.Sleep(0); });
 
             UpdateBackBuffer();
@@ -274,7 +310,7 @@ namespace BuddhabrotCL
             isRunning = false;
             hpet.Stop();
             startButton.Enabled = startMenuItem.Enabled = true;
-            stopButton.Enabled = stopMenuItem.Enabled = false;
+            Status = AppStatus.Ready;
         }
 
         private float Fx(float x, float factor = 1.0f)
@@ -323,6 +359,8 @@ namespace BuddhabrotCL
 
             int bitLen = backBitmap.PixelFormat == PixelFormat.Format24bppRgb ? 3 : 4;
 
+            RGBA[] h_resBuf = bb.h_resultBuf;
+
             BitmapData bitmapData = backBitmap.LockBits(
                 region,
                 ImageLockMode.WriteOnly,
@@ -343,12 +381,12 @@ namespace BuddhabrotCL
 
                     byte r, g, b;
                     if (bp.isGrayscale)
-                        r = g = b = ByteClamp(scaleR * Fx(bb.h_resultBuf[i].r, bp.Factor));
+                        r = g = b = ByteClamp(scaleR * Fx(h_resBuf[i].r, bp.Factor));
                     else
                     {
-                        r = ByteClamp(scaleR * Fx(bb.h_resultBuf[i].r, bp.Factor));
-                        g = ByteClamp(scaleG * Fx(bb.h_resultBuf[i].g, bp.Factor));
-                        b = ByteClamp(scaleB * Fx(bb.h_resultBuf[i].b, bp.Factor));
+                        r = ByteClamp(scaleR * Fx(h_resBuf[i].r, bp.Factor));
+                        g = ByteClamp(scaleG * Fx(h_resBuf[i].g, bp.Factor));
+                        b = ByteClamp(scaleB * Fx(h_resBuf[i].b, bp.Factor));
                     }
 
                     switch(bp.Tint)
@@ -633,6 +671,7 @@ namespace BuddhabrotCL
         {
             SetLabelColumnWidth(propertyGrid, propertyGrid.Width / 2);
             autoupdateMenuItem.Checked = autoupdateButton.Checked = autoUpdate;
+            Status = AppStatus.Ready;
         }
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)

@@ -10,7 +10,7 @@ namespace BuddhabrotCL
         public ComputePlatform clPlatform;
         public ComputeContext clContext;
         public ComputeContextPropertyList clProperties;
-        public ComputeKernel clkBbrot;
+        public ComputeKernel clKernel;
         public ComputeProgram clProgram;
         public ComputeCommandQueue clCommands;
         public ComputeEventList clEvents;
@@ -66,7 +66,7 @@ namespace BuddhabrotCL
                 try
                 {
                     clProgram.Build(null, null, null, IntPtr.Zero);
-                    clkBbrot = clProgram.CreateKernel(fn);
+                    clKernel = clProgram.CreateKernel(fn);
                     break;
                 }
                 catch(Exception ex)
@@ -75,7 +75,7 @@ namespace BuddhabrotCL
                 }
             }
 
-            if (clkBbrot == null)
+            if (clKernel == null)
                 throw new Exception(msg);
         }
 
@@ -103,32 +103,32 @@ namespace BuddhabrotCL
             cbuf_Result =
                 new ComputeBuffer<RGBA>(
                     clContext,
-                    ComputeMemoryFlags.ReadWrite,
+                    ComputeMemoryFlags.ReadOnly,
                     bp.width * bp.height);
         }
 
         public void ConfigureKernel()
         {
-            clkBbrot.SetValueArgument(0, bp.reMin);
-            clkBbrot.SetValueArgument(1, bp.reMax);
-            clkBbrot.SetValueArgument(2, bp.imMin);
-            clkBbrot.SetValueArgument(3, bp.imMax);
-            clkBbrot.SetValueArgument(4, (uint)bp.iterMin);
-            clkBbrot.SetValueArgument(5, (uint)bp.iterMax);
-            clkBbrot.SetValueArgument(6, (uint)bp.width);
-            clkBbrot.SetValueArgument(7, (uint)bp.height);
-            clkBbrot.SetValueArgument(8, bp.escapeOrbit);
-            clkBbrot.SetValueArgument(9, bp.minColor);
-            clkBbrot.SetValueArgument(10, bp.maxColor);
-            clkBbrot.SetValueArgument(11, bp.isGrayscale ? 1u : 0u);
-            clkBbrot.SetValueArgument(12, bp.IsHackMode ? 1u : 0u);
-            clkBbrot.SetMemoryArgument(13, cbuf_Rng);
-            clkBbrot.SetMemoryArgument(14, cbuf_Result);
+            clKernel.SetValueArgument(0, bp.reMin);
+            clKernel.SetValueArgument(1, bp.reMax);
+            clKernel.SetValueArgument(2, bp.imMin);
+            clKernel.SetValueArgument(3, bp.imMax);
+            clKernel.SetValueArgument(4, (uint)bp.iterMin);
+            clKernel.SetValueArgument(5, (uint)bp.iterMax);
+            clKernel.SetValueArgument(6, (uint)bp.width);
+            clKernel.SetValueArgument(7, (uint)bp.height);
+            clKernel.SetValueArgument(8, bp.escapeOrbit);
+            clKernel.SetValueArgument(9, bp.minColor);
+            clKernel.SetValueArgument(10, bp.maxColor);
+            clKernel.SetValueArgument(11, bp.isGrayscale ? 1u : 0u);
+            clKernel.SetValueArgument(12, bp.IsHackMode ? 1u : 0u);
+            clKernel.SetMemoryArgument(13, cbuf_Rng);
+            clKernel.SetMemoryArgument(14, cbuf_Result);
         }
 
         public void ExecuteKernel_Buddhabrot()
         {
-            clCommands.Execute(clkBbrot, null, new long[] { bp.workers }, null, clEvents);
+            clCommands.Execute(clKernel, null, new long[] { bp.workers }, null, clEvents);
         }
 
 

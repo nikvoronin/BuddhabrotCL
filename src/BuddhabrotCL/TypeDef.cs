@@ -2,6 +2,14 @@
 
 namespace BuddhabrotCL
 {
+    public enum AppStatus
+    {
+        Loading,
+        Ready,
+        Rendering,
+        Finishing
+    }
+
     public enum FxFilter
     {
         Linear,

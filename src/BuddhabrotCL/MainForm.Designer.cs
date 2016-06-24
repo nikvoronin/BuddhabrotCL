@@ -30,25 +30,37 @@
         {
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.platformStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.kernelStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.coordStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.memoryStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.kernelTimeStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.renderTimeStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.saveImageFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.propertyGrid = new System.Windows.Forms.PropertyGrid();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.saveAsImageButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.startButton = new System.Windows.Forms.ToolStripButton();
+            this.stopButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.fullViewButton = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
+            this.autoupdateButton = new System.Windows.Forms.ToolStripButton();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.mainMenu = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openKernelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.saveImageAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.defaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+            this.autoupdateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.startMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.stopMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.platformMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.kernelsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -56,19 +68,8 @@
             this.contextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveAsImageButton = new System.Windows.Forms.ToolStripButton();
-            this.startButton = new System.Windows.Forms.ToolStripButton();
-            this.stopButton = new System.Windows.Forms.ToolStripButton();
-            this.fullViewButton = new System.Windows.Forms.ToolStripButton();
-            this.autoupdateButton = new System.Windows.Forms.ToolStripButton();
-            this.saveImageAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.defaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.startMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.stopMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.autoupdateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             this.drawPanel = new BuddhabrotCL.CanvasPanel();
+            this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
@@ -81,9 +82,10 @@
             // mainStatusStrip
             // 
             this.mainStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.statusLabel,
             this.platformStatusLabel,
-            this.kernelStatusLabel,
             this.coordStatusLabel,
+            this.memoryStatusLabel,
             this.kernelTimeStatusLabel,
             this.renderTimeStatusLabel});
             this.mainStatusStrip.Location = new System.Drawing.Point(0, 635);
@@ -93,25 +95,26 @@
             // 
             // platformStatusLabel
             // 
+            this.platformStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
             this.platformStatusLabel.Name = "platformStatusLabel";
             this.platformStatusLabel.Size = new System.Drawing.Size(61, 20);
             this.platformStatusLabel.Text = "OpenCL";
-            // 
-            // kernelStatusLabel
-            // 
-            this.kernelStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
-            this.kernelStatusLabel.Name = "kernelStatusLabel";
-            this.kernelStatusLabel.Size = new System.Drawing.Size(125, 20);
-            this.kernelStatusLabel.Text = "Kernel: cl_kernel.c";
             // 
             // coordStatusLabel
             // 
             this.coordStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
             this.coordStatusLabel.Name = "coordStatusLabel";
-            this.coordStatusLabel.Size = new System.Drawing.Size(471, 20);
+            this.coordStatusLabel.Size = new System.Drawing.Size(338, 20);
             this.coordStatusLabel.Spring = true;
             this.coordStatusLabel.Text = "[Re; Im] = -; -";
             this.coordStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // memoryStatusLabel
+            // 
+            this.memoryStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
+            this.memoryStatusLabel.Name = "memoryStatusLabel";
+            this.memoryStatusLabel.Size = new System.Drawing.Size(145, 20);
+            this.memoryStatusLabel.Text = "Memory: -Mb < -Mb";
             // 
             // kernelTimeStatusLabel
             // 
@@ -183,15 +186,76 @@
             this.toolStrip1.TabIndex = 18;
             this.toolStrip1.Text = "toolStrip1";
             // 
+            // saveAsImageButton
+            // 
+            this.saveAsImageButton.BackColor = System.Drawing.SystemColors.Control;
+            this.saveAsImageButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.saveAsImageButton.Image = global::BuddhabrotCL.Properties.Resources.disks;
+            this.saveAsImageButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.saveAsImageButton.Name = "saveAsImageButton";
+            this.saveAsImageButton.Size = new System.Drawing.Size(23, 22);
+            this.saveAsImageButton.Text = "Save Image As...";
+            this.saveAsImageButton.Click += new System.EventHandler(this.saveAsImageButton_Click);
+            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
             // 
+            // startButton
+            // 
+            this.startButton.BackColor = System.Drawing.SystemColors.Control;
+            this.startButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.startButton.Image = global::BuddhabrotCL.Properties.Resources.control;
+            this.startButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.startButton.Name = "startButton";
+            this.startButton.Size = new System.Drawing.Size(23, 22);
+            this.startButton.Text = "Start";
+            this.startButton.Click += new System.EventHandler(this.startButton_Click);
+            // 
+            // stopButton
+            // 
+            this.stopButton.BackColor = System.Drawing.SystemColors.Control;
+            this.stopButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.stopButton.Image = global::BuddhabrotCL.Properties.Resources.control_stop_square;
+            this.stopButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.stopButton.Name = "stopButton";
+            this.stopButton.Size = new System.Drawing.Size(23, 22);
+            this.stopButton.Text = "Stop";
+            this.stopButton.Click += new System.EventHandler(this.stopButton_Click);
+            // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
             this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
+            // 
+            // fullViewButton
+            // 
+            this.fullViewButton.BackColor = System.Drawing.SystemColors.Control;
+            this.fullViewButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.fullViewButton.Image = global::BuddhabrotCL.Properties.Resources.picture;
+            this.fullViewButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.fullViewButton.Name = "fullViewButton";
+            this.fullViewButton.Size = new System.Drawing.Size(23, 22);
+            this.fullViewButton.Text = "Full view";
+            this.fullViewButton.Click += new System.EventHandler(this.fullViewButton_Click);
+            // 
+            // toolStripSeparator8
+            // 
+            this.toolStripSeparator8.Name = "toolStripSeparator8";
+            this.toolStripSeparator8.Size = new System.Drawing.Size(6, 25);
+            // 
+            // autoupdateButton
+            // 
+            this.autoupdateButton.Checked = true;
+            this.autoupdateButton.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.autoupdateButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.autoupdateButton.Image = global::BuddhabrotCL.Properties.Resources.arrow_circle_double;
+            this.autoupdateButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.autoupdateButton.Name = "autoupdateButton";
+            this.autoupdateButton.Size = new System.Drawing.Size(23, 22);
+            this.autoupdateButton.Text = "Autoupdate";
+            this.autoupdateButton.Click += new System.EventHandler(this.autoupdateMenuItem_Click);
             // 
             // openFileDialog
             // 
@@ -238,6 +302,14 @@
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(181, 6);
             // 
+            // saveImageAsToolStripMenuItem
+            // 
+            this.saveImageAsToolStripMenuItem.Image = global::BuddhabrotCL.Properties.Resources.disks;
+            this.saveImageAsToolStripMenuItem.Name = "saveImageAsToolStripMenuItem";
+            this.saveImageAsToolStripMenuItem.Size = new System.Drawing.Size(184, 24);
+            this.saveImageAsToolStripMenuItem.Text = "Save &Image As...";
+            this.saveImageAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsImageButton_Click);
+            // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
@@ -260,6 +332,29 @@
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(53, 24);
             this.viewToolStripMenuItem.Text = "&View";
             // 
+            // defaultToolStripMenuItem
+            // 
+            this.defaultToolStripMenuItem.Image = global::BuddhabrotCL.Properties.Resources.picture;
+            this.defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
+            this.defaultToolStripMenuItem.Size = new System.Drawing.Size(157, 24);
+            this.defaultToolStripMenuItem.Text = "&Full View";
+            this.defaultToolStripMenuItem.Click += new System.EventHandler(this.fullViewButton_Click);
+            // 
+            // toolStripSeparator7
+            // 
+            this.toolStripSeparator7.Name = "toolStripSeparator7";
+            this.toolStripSeparator7.Size = new System.Drawing.Size(154, 6);
+            // 
+            // autoupdateMenuItem
+            // 
+            this.autoupdateMenuItem.Checked = true;
+            this.autoupdateMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.autoupdateMenuItem.Image = global::BuddhabrotCL.Properties.Resources.arrow_circle_double;
+            this.autoupdateMenuItem.Name = "autoupdateMenuItem";
+            this.autoupdateMenuItem.Size = new System.Drawing.Size(157, 24);
+            this.autoupdateMenuItem.Text = "&Autoupdate";
+            this.autoupdateMenuItem.Click += new System.EventHandler(this.autoupdateMenuItem_Click);
+            // 
             // renderToolStripMenuItem
             // 
             this.renderToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -270,6 +365,22 @@
             this.renderToolStripMenuItem.Name = "renderToolStripMenuItem";
             this.renderToolStripMenuItem.Size = new System.Drawing.Size(68, 24);
             this.renderToolStripMenuItem.Text = "&Render";
+            // 
+            // startMenuItem
+            // 
+            this.startMenuItem.Image = global::BuddhabrotCL.Properties.Resources.control;
+            this.startMenuItem.Name = "startMenuItem";
+            this.startMenuItem.Size = new System.Drawing.Size(135, 24);
+            this.startMenuItem.Text = "&Start";
+            this.startMenuItem.Click += new System.EventHandler(this.startButton_Click);
+            // 
+            // stopMenuItem
+            // 
+            this.stopMenuItem.Image = global::BuddhabrotCL.Properties.Resources.control_stop_square;
+            this.stopMenuItem.Name = "stopMenuItem";
+            this.stopMenuItem.Size = new System.Drawing.Size(135, 24);
+            this.stopMenuItem.Text = "St&op";
+            this.stopMenuItem.Click += new System.EventHandler(this.stopButton_Click);
             // 
             // toolStripSeparator6
             // 
@@ -302,128 +413,20 @@
             // 
             this.contextToolStripMenuItem.Enabled = false;
             this.contextToolStripMenuItem.Name = "contextToolStripMenuItem";
-            this.contextToolStripMenuItem.Size = new System.Drawing.Size(152, 24);
+            this.contextToolStripMenuItem.Size = new System.Drawing.Size(129, 24);
             this.contextToolStripMenuItem.Text = "&Context";
             // 
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator5.Size = new System.Drawing.Size(126, 6);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 24);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(129, 24);
             this.aboutToolStripMenuItem.Text = "&About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
-            // saveAsImageButton
-            // 
-            this.saveAsImageButton.BackColor = System.Drawing.SystemColors.Control;
-            this.saveAsImageButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.saveAsImageButton.Image = global::BuddhabrotCL.Properties.Resources.disks;
-            this.saveAsImageButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.saveAsImageButton.Name = "saveAsImageButton";
-            this.saveAsImageButton.Size = new System.Drawing.Size(23, 22);
-            this.saveAsImageButton.Text = "Save Image As...";
-            this.saveAsImageButton.Click += new System.EventHandler(this.saveAsImageButton_Click);
-            // 
-            // startButton
-            // 
-            this.startButton.BackColor = System.Drawing.SystemColors.Control;
-            this.startButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.startButton.Image = global::BuddhabrotCL.Properties.Resources.control;
-            this.startButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.startButton.Name = "startButton";
-            this.startButton.Size = new System.Drawing.Size(23, 22);
-            this.startButton.Text = "Start";
-            this.startButton.Click += new System.EventHandler(this.startButton_Click);
-            // 
-            // stopButton
-            // 
-            this.stopButton.BackColor = System.Drawing.SystemColors.Control;
-            this.stopButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.stopButton.Image = global::BuddhabrotCL.Properties.Resources.control_stop_square;
-            this.stopButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.stopButton.Name = "stopButton";
-            this.stopButton.Size = new System.Drawing.Size(23, 22);
-            this.stopButton.Text = "Stop";
-            this.stopButton.Click += new System.EventHandler(this.stopButton_Click);
-            // 
-            // fullViewButton
-            // 
-            this.fullViewButton.BackColor = System.Drawing.SystemColors.Control;
-            this.fullViewButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.fullViewButton.Image = global::BuddhabrotCL.Properties.Resources.picture;
-            this.fullViewButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.fullViewButton.Name = "fullViewButton";
-            this.fullViewButton.Size = new System.Drawing.Size(23, 22);
-            this.fullViewButton.Text = "Full view";
-            this.fullViewButton.Click += new System.EventHandler(this.fullViewButton_Click);
-            // 
-            // autoupdateButton
-            // 
-            this.autoupdateButton.Checked = true;
-            this.autoupdateButton.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoupdateButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.autoupdateButton.Image = global::BuddhabrotCL.Properties.Resources.arrow_circle_double;
-            this.autoupdateButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.autoupdateButton.Name = "autoupdateButton";
-            this.autoupdateButton.Size = new System.Drawing.Size(23, 22);
-            this.autoupdateButton.Text = "Autoupdate";
-            this.autoupdateButton.Click += new System.EventHandler(this.autoupdateMenuItem_Click);
-            // 
-            // saveImageAsToolStripMenuItem
-            // 
-            this.saveImageAsToolStripMenuItem.Image = global::BuddhabrotCL.Properties.Resources.disks;
-            this.saveImageAsToolStripMenuItem.Name = "saveImageAsToolStripMenuItem";
-            this.saveImageAsToolStripMenuItem.Size = new System.Drawing.Size(184, 24);
-            this.saveImageAsToolStripMenuItem.Text = "Save &Image As...";
-            this.saveImageAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsImageButton_Click);
-            // 
-            // defaultToolStripMenuItem
-            // 
-            this.defaultToolStripMenuItem.Image = global::BuddhabrotCL.Properties.Resources.picture;
-            this.defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            this.defaultToolStripMenuItem.Size = new System.Drawing.Size(157, 24);
-            this.defaultToolStripMenuItem.Text = "&Full View";
-            this.defaultToolStripMenuItem.Click += new System.EventHandler(this.fullViewButton_Click);
-            // 
-            // startMenuItem
-            // 
-            this.startMenuItem.Image = global::BuddhabrotCL.Properties.Resources.control;
-            this.startMenuItem.Name = "startMenuItem";
-            this.startMenuItem.Size = new System.Drawing.Size(135, 24);
-            this.startMenuItem.Text = "&Start";
-            this.startMenuItem.Click += new System.EventHandler(this.startButton_Click);
-            // 
-            // stopMenuItem
-            // 
-            this.stopMenuItem.Image = global::BuddhabrotCL.Properties.Resources.control_stop_square;
-            this.stopMenuItem.Name = "stopMenuItem";
-            this.stopMenuItem.Size = new System.Drawing.Size(135, 24);
-            this.stopMenuItem.Text = "St&op";
-            this.stopMenuItem.Click += new System.EventHandler(this.stopButton_Click);
-            // 
-            // autoupdateMenuItem
-            // 
-            this.autoupdateMenuItem.Checked = true;
-            this.autoupdateMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoupdateMenuItem.Image = global::BuddhabrotCL.Properties.Resources.arrow_circle_double;
-            this.autoupdateMenuItem.Name = "autoupdateMenuItem";
-            this.autoupdateMenuItem.Size = new System.Drawing.Size(157, 24);
-            this.autoupdateMenuItem.Text = "&Autoupdate";
-            this.autoupdateMenuItem.Click += new System.EventHandler(this.autoupdateMenuItem_Click);
-            // 
-            // toolStripSeparator7
-            // 
-            this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(154, 6);
-            // 
-            // toolStripSeparator8
-            // 
-            this.toolStripSeparator8.Name = "toolStripSeparator8";
-            this.toolStripSeparator8.Size = new System.Drawing.Size(6, 25);
             // 
             // drawPanel
             // 
@@ -435,6 +438,12 @@
             this.drawPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseDown);
             this.drawPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseMove);
             this.drawPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseUp);
+            // 
+            // statusLabel
+            // 
+            this.statusLabel.Name = "statusLabel";
+            this.statusLabel.Size = new System.Drawing.Size(72, 20);
+            this.statusLabel.Text = "Loading...";
             // 
             // MainForm
             // 
@@ -502,7 +511,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
         private System.Windows.Forms.ToolStripMenuItem platformMenuItem;
         private System.Windows.Forms.ToolStripStatusLabel platformStatusLabel;
-        private System.Windows.Forms.ToolStripStatusLabel kernelStatusLabel;
         private System.Windows.Forms.ToolStripMenuItem openKernelToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
@@ -510,6 +518,8 @@
         private System.Windows.Forms.ToolStripMenuItem autoupdateMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+        private System.Windows.Forms.ToolStripStatusLabel memoryStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel statusLabel;
     }
 }
 
