@@ -7,4 +7,4 @@
 [assembly: AssemblyCopyright("Copyright © 2011-2016 Nikolai Voronin")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("1.6")]
+[assembly: AssemblyVersion("1.7")]

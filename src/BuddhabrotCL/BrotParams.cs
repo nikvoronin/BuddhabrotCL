@@ -64,9 +64,6 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         [DisplayName("Im Max")]
         public float ImMax { get; set; } =  2f;
         [Category("View")]
-        [DisplayName("Cyclic Update")]
-        [Description("Switch on/off cyclic update of the image")]
-        public bool UpdateCyclic { get; set; } = true;
 
         public float reMin;
         public float reMax;

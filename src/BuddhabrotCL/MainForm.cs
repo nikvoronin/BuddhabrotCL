@@ -8,55 +8,123 @@ using System.IO;
 using Cloo;
 using System.Reflection;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace BuddhabrotCL
 {
     public partial class MainForm : Form
     {
-        const string DEFAULT_KERNEL_FILENAME_BBROT = "cl_heuristic.c";
+        const string DEFAULT_KERNEL_FILENAME = "/buddhabrot/cl_heuristic.c";
+        const string DEFAULT_KERNEL_DIR = "kernel";
+        const string APP_NAME = "BuddhabrotCL";
+        string AppFullName = APP_NAME;
 
         BrotParams bp = new BrotParams();
         ComputePlatform cPlatform = null;
         Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.White));
         bool isRunning = false;
         Stopwatch hpet = new Stopwatch();
+        bool autoUpdate = true;
+
+        Buddhabrot bb;
+
+        Bitmap backBitmap = null;
+        Bitmap frontBitmap = null;
+        bool __should_update = false;
+        object __frontLocker = new object();
+        Thread thGenerator;
+        Thread thPainter;
+        CancellationTokenSource cts;
+        string kernelFilename = DEFAULT_KERNEL_DIR + DEFAULT_KERNEL_FILENAME;
 
         public MainForm()
         {
             InitializeComponent();
+
             Version v = Assembly.GetExecutingAssembly().GetName().Version;
-            Text = $"BuddhabrotCL {v.Major}.{v.Minor}.{v.Build}";
+            AppFullName = $"{APP_NAME} {v.Major}.{v.Minor}.{v.Build}";
+            Text = AppFullName;
 
             foreach (var p in ComputePlatform.Platforms)
             {
-                ToolStripItem item = platformDropDownButton.DropDownItems.Add(p.Name);
+                ToolStripMenuItem item = (ToolStripMenuItem)platformMenuItem.DropDownItems.Add(p.Name);
+                item.CheckOnClick = false;
                 item.Tag = p;
+                item.Click += platformMenuSubItem_Click;
             }
 
-            if (platformDropDownButton.HasDropDownItems)
+            if (platformMenuItem.HasDropDownItems)
             {
-                cPlatform = ComputePlatform.Platforms[0];
-                platformDropDownButton.Text = cPlatform.Name;
+                ((ToolStripMenuItem)platformMenuItem.DropDownItems[0]).Checked = true;
+                Platform = ComputePlatform.Platforms[0];
             }
 
-            kernelButton.Text = new FileInfo(bbrotKernelPath).Name;
+            DirectoryInfo di = new DirectoryInfo(DEFAULT_KERNEL_DIR);
+            KernelDirs(di, kernelsMenuItem);
 
-            startButton.Enabled = true;
-            stopButton.Enabled = false;
+            startButton.Enabled = startMenuItem.Enabled = true;
+            stopButton.Enabled = stopMenuItem.Enabled = false;
 
             propertyGrid.SelectedObject = bp;
+            KernelFilename = kernelFilename;
         }
 
+        private void KernelDirs(DirectoryInfo parentDirInfo, ToolStripMenuItem parentMenuItem)
+        {
+            DirectoryInfo[] dirs = parentDirInfo.GetDirectories("*", SearchOption.TopDirectoryOnly);
+            foreach (DirectoryInfo di in dirs)
+            {
+                ToolStripMenuItem dItem = (ToolStripMenuItem)parentMenuItem.DropDownItems.Add(di.Name);
+                KernelDirs(di, dItem);
+            }
 
-        Buddhabrot bb;
+            FileInfo[] files = parentDirInfo.GetFiles("cl_*.c", SearchOption.TopDirectoryOnly);
+            foreach(FileInfo fi in files)
+            {
+                ToolStripMenuItem fileItem = (ToolStripMenuItem)parentMenuItem.DropDownItems.Add(fi.Name);
+                fileItem.Tag = fi.FullName;
+                fileItem.Click += kernelsMenuSubItem_Click;
+            }
+        }
 
-        Bitmap bitmap = null;
-        bool __should_update = false;
-        bool __lock_backbuffer = true;
-        Thread workThread;
-        Thread drawThread;
-        CancellationTokenSource cts;
-        string bbrotKernelPath = "kernel/" + DEFAULT_KERNEL_FILENAME_BBROT;
+        private string KernelFilename
+        {
+            set
+            {
+                kernelFilename = value;
+                string filename = new FileInfo(kernelFilename).Name;
+                kernelStatusLabel.Text = $"Kernel: {filename}";
+                Text = $"{filename} - {AppFullName}";
+            }
+        }
+
+        private void kernelsMenuSubItem_Click(object sender, EventArgs e)
+        {
+            ToolStripMenuItem fileItem = (ToolStripMenuItem)sender;
+            KernelFilename = (string)fileItem.Tag;
+        }
+
+        private ComputePlatform Platform
+        {
+            set
+            {
+                cPlatform = value;
+                platformStatusLabel.Text = $"{cPlatform.Vendor.Replace(" Corporation","")} {cPlatform.Version}";
+            }
+        }
+
+        private void platformMenuSubItem_Click(object sender, EventArgs e)
+        {
+            ToolStripMenuItem item = sender as ToolStripMenuItem;
+
+            if (!item.Checked)
+            {
+                foreach (ToolStripMenuItem it in platformMenuItem.DropDownItems)
+                    it.Checked = it == item;
+
+                Platform = item.Tag as ComputePlatform;
+            }
+        }
 
         private void TransferBBrotParameters()
         {
@@ -83,7 +151,7 @@ namespace BuddhabrotCL
 
             try
             {
-                string kernelSource = File.ReadAllText(bbrotKernelPath);
+                string kernelSource = File.ReadAllText(kernelFilename);
 
                 bb = new Buddhabrot(cPlatform, kernelSource, bp);
 
@@ -101,45 +169,53 @@ namespace BuddhabrotCL
                 return;
             }
 
-            startButton.Enabled = kernelButton.Enabled = platformDropDownButton.Enabled = false;
-            stopButton.Enabled = true;
+            startButton.Enabled = startMenuItem.Enabled = false;
+            stopButton.Enabled = stopMenuItem.Enabled = true;                        
 
-            if (bitmap != null)
+            if (backBitmap != null)
             {
-                bitmap.Dispose();
-                bitmap = null;
+                backBitmap.Dispose();
+                backBitmap = null;
             }
 
-            Graphics g = Graphics.FromHwnd(this.Handle);
-            bitmap = new Bitmap(bp.width, bp.height, g);
+            if (frontBitmap != null)
+            {
+                frontBitmap.Dispose();
+                frontBitmap = null;
+            }
+
+            Graphics g = Graphics.FromHwnd(Handle);
+            backBitmap = new Bitmap(bp.width, bp.height, g);
             drawPanel.Width = bp.width;
             drawPanel.Height = bp.height;
+            frontBitmap = new Bitmap(backBitmap);
 
             cts = new CancellationTokenSource();
 
             SynchronizationContext ui = SynchronizationContext.Current;
 
-            workThread = new Thread(() => Generate(ui, cts.Token));
-            workThread.IsBackground = false;
+            thGenerator = new Thread(() => Generate(ui, cts.Token));
+            thGenerator.IsBackground = false;
 
-            drawThread = new Thread(() => DrawResultBuffer(ui, cts.Token));
-            drawThread.IsBackground = false;
+            thPainter = new Thread(() => DrawResultBuffer(ui, cts.Token));
+            thPainter.IsBackground = true;
 
             isRunning = true;
             hpet.Restart();
-            workThread.Start();
-            drawThread.Start();
+            thGenerator.Start();
+            thPainter.Start();
         }
 
         private void DrawResultBuffer(SynchronizationContext ui, CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
+                long hpet_ubbb_st = hpet.ElapsedTicks;
                 if (__should_update && ui != null)
                 {
                     __should_update = false;
-                    if (bp.UpdateCyclic)
-                        UpdateBackBufferBitmap();
+                    if (autoUpdate)
+                        UpdateBackBuffer();
 
                     if (token.IsCancellationRequested)
                         return;
@@ -151,20 +227,21 @@ namespace BuddhabrotCL
                             {
                                 long ktime = hpet_ktime / TimeSpan.TicksPerMillisecond;
                                 if (ktime >= 1000)
-                                    kernelTimeStatusLabel.Text = $"{(ktime/1000f).ToString("0.00")}s";
+                                    kernelTimeStatusLabel.Text = $"Core: {(ktime/1000f).ToString("0.00")}s";
                                 else
-                                    kernelTimeStatusLabel.Text = $"{ktime}ms";
+                                    kernelTimeStatusLabel.Text = $"Core: {ktime}ms";
                             }
 
                             TimeSpan ts = TimeSpan.FromMilliseconds(hpet.ElapsedMilliseconds);
-                            renderTimeStatusLabel.Text = $"{ts.ToString(@"dd\ hh\:mm\:ss")}";
+                            renderTimeStatusLabel.Text = $"Rendering: {ts.ToString(@"dd\ hh\:mm\:ss")}";
 
-                            if (bp.UpdateCyclic)
+                            if (autoUpdate)
                                 drawPanel.Invalidate();
                         }, null);
                 } // if
 
-                Thread.Sleep(250);
+                if(hpet.ElapsedTicks - hpet_ubbb_st > 2500000000)
+                    Thread.Sleep(250);
             } // while
         }
 
@@ -187,18 +264,17 @@ namespace BuddhabrotCL
             }
         }
 
-        private void stopButton_Click(object sender, EventArgs e)
+        private async void stopButton_Click(object sender, EventArgs e)
         {
             cts?.Cancel();
+            await Task.Run(() => { while (thPainter.IsAlive) Thread.Sleep(0); });
 
-            while (__lock_backbuffer) { Thread.Sleep(100); }
-
-            UpdateBackBufferBitmap();
+            UpdateBackBuffer();
 
             isRunning = false;
             hpet.Stop();
-            startButton.Enabled = kernelButton.Enabled = platformDropDownButton.Enabled = true;
-            stopButton.Enabled = false;
+            startButton.Enabled = startMenuItem.Enabled = true;
+            stopButton.Enabled = stopMenuItem.Enabled = false;
         }
 
         private float Fx(float x, float factor = 1.0f)
@@ -219,17 +295,16 @@ namespace BuddhabrotCL
             }
         }
 
-        private void UpdateBackBufferBitmap()
+        private void UpdateBackBuffer()
         {
-            UpdateBackBufferBitmap(new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+            UpdateBackBuffer(new Rectangle(0, 0, backBitmap.Width, backBitmap.Height));
         }
 
-        private void UpdateBackBufferBitmap(Rectangle region)
+        private void UpdateBackBuffer(Rectangle region)
         {
-            if (bitmap == null || region.Width == 0 || region.Height == 0)
+            if (backBitmap == null || region.Width == 0 || region.Height == 0)
                 return;
 
-            __lock_backbuffer = true;
             float maxR = float.MinValue;
             float maxG = float.MinValue;
             float maxB = float.MinValue;
@@ -246,12 +321,12 @@ namespace BuddhabrotCL
                     maxB = Math.Max(bb.h_resultBuf[i].b, maxB);
                 }
 
-            int bitLen = bitmap.PixelFormat == PixelFormat.Format24bppRgb ? 3 : 4;
+            int bitLen = backBitmap.PixelFormat == PixelFormat.Format24bppRgb ? 3 : 4;
 
-            BitmapData bitmapData = bitmap.LockBits(
+            BitmapData bitmapData = backBitmap.LockBits(
                 region,
                 ImageLockMode.WriteOnly,
-                bitmap.PixelFormat);
+                backBitmap.PixelFormat);
             byte[] bitmapBuf = new byte[bitmapData.Stride * bitmapData.Height];
             Marshal.Copy(bitmapData.Scan0, bitmapBuf, 0, bitmapBuf.Length);
 
@@ -316,12 +391,13 @@ namespace BuddhabrotCL
             } // for y
 
             Marshal.Copy(bitmapBuf, 0, bitmapData.Scan0, bitmapData.Stride * bitmapData.Height);
-            bitmap.UnlockBits(bitmapData);
+            backBitmap.UnlockBits(bitmapData);
 
-            if (isDrag && isRunning)
-                DrawCursor();
-
-            __lock_backbuffer = false;
+            lock (__frontLocker)
+            {
+                Graphics g = Graphics.FromImage(frontBitmap);
+                g.DrawImageUnscaled(backBitmap, 0, 0);
+            }
         }
 
         private byte ByteClamp(float value)
@@ -353,7 +429,7 @@ namespace BuddhabrotCL
         private void DrawCursor()
         {
             //float k = (float)bp.width / bp.height;
-            Graphics g = Graphics.FromImage(bitmap);
+            Graphics g = Graphics.FromImage(frontBitmap);
             Rectangle rect = GetCursorRect(dragCur);
 
             g.FillRectangle(
@@ -383,29 +459,26 @@ namespace BuddhabrotCL
 
         private void saveAsImageButton_Click(object sender, EventArgs e)
         {
-            bool uc = bp.UpdateCyclic;
-            bp.UpdateCyclic = false;
+            bool uc = autoUpdate;
+            autoUpdate = false;
 
             if (!isRunning)
             {
-                UpdateBackBufferBitmap();
+                UpdateBackBuffer();
                 drawPanel.Invalidate();
             }
 
             if (saveImageFileDialog.ShowDialog() == DialogResult.OK)
-                bitmap.Save(saveImageFileDialog.FileName);
+                backBitmap.Save(saveImageFileDialog.FileName);
 
-            bp.UpdateCyclic = uc;
+            autoUpdate = uc;
         }
 
         private void drawPanel_Paint(object sender, PaintEventArgs e)
         {
-            if (bitmap != null && !__lock_backbuffer)
-            {
-                __lock_backbuffer = true;
-                e.Graphics.DrawImageUnscaled(bitmap, 0, 0);
-                __lock_backbuffer = false;
-            }
+            lock (__frontLocker)
+                if (frontBitmap != null)
+                    e.Graphics.DrawImageUnscaled(frontBitmap, 0, 0);
         }
 
         private void drawPanel_MouseMove(object sender, MouseEventArgs e)
@@ -416,9 +489,9 @@ namespace BuddhabrotCL
             int hNX = bp.width >> 1;
             int hNY = bp.height >> 1;
 
-            string xstr = ToRe(e.X).ToString().Replace(",", ".");
-            string ystr = ToIm(e.Y).ToString().Replace(",", ".");
-            coordStatusLabel.Text = xstr + "; " + ystr;
+            string xstr = ToRe(e.X).ToString("0.00000000").Replace(",", ".");
+            string ystr = ToIm(e.Y).ToString("0.00000000").Replace(",", ".");
+            coordStatusLabel.Text = $"[Re; Im]= {xstr}; {ystr}";
 
             if (isDrag)
             {
@@ -426,7 +499,10 @@ namespace BuddhabrotCL
                 {
                     Rectangle r = GetCursorRect(dragCur);
                     if ((r.Width > 0) && (r.Height > 0))
-                        UpdateBackBufferBitmap(r);
+                    {
+                        lock (__frontLocker)
+                            Graphics.FromImage(frontBitmap).DrawImage(backBitmap, r, r, GraphicsUnit.Pixel);
+                    }
                 }
 
                 dragCur = e.Location;
@@ -442,16 +518,7 @@ namespace BuddhabrotCL
         private void kernelButton_Click(object sender, EventArgs e)
         {
             if(openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                bbrotKernelPath = openFileDialog.FileName;
-                kernelButton.Text = new FileInfo(bbrotKernelPath).Name;
-            }
-        }
-
-        private void platformDropDownButton_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-            cPlatform = e.ClickedItem.Tag as ComputePlatform;
-            platformDropDownButton.Text = cPlatform.Name;
+                KernelFilename = openFileDialog.FileName;
         }
 
         bool isDrag = false;
@@ -460,13 +527,14 @@ namespace BuddhabrotCL
         Point dragCur;
         private void drawPanel_MouseDown(object sender, MouseEventArgs e)
         {
-            if (bitmap == null)
+            if (backBitmap == null)
                 return;
 
             if (!isRunning)
             {
                 Rectangle r = GetCursorRect(dragStop);
-                UpdateBackBufferBitmap(r);
+                lock (__frontLocker)
+                    Graphics.FromImage(frontBitmap).DrawImage(backBitmap, r, r, GraphicsUnit.Pixel);
             }
 
             dragStart = e.Location;
@@ -494,13 +562,20 @@ namespace BuddhabrotCL
                 int yl = Math.Abs(dragStart.Y - dragStop.Y);
                 int maxl = Math.Max(xl, yl);
 
-                bp.ReMin = ToRe(dragStart.X - maxl);
-                bp.ReMax = ToRe(dragStart.X + maxl);
-                bp.ImMin = ToIm(dragStart.Y + maxl);
-                bp.ImMax = ToIm(dragStart.Y - maxl);
+                if (maxl > 0)
+                {
+                    bp.ReMin = ToRe(dragStart.X - maxl);
+                    bp.ReMax = ToRe(dragStart.X + maxl);
+                    bp.ImMin = ToIm(dragStart.Y + maxl);
+                    bp.ImMax = ToIm(dragStart.Y - maxl);
 
-                propertyGrid.Refresh();
+                    propertyGrid.Refresh();
+
+                    if (!isRunning)
+                        drawPanel.Invalidate();
+                }
             }
+
             isDrag = false;
         }
 
@@ -514,7 +589,8 @@ namespace BuddhabrotCL
 
             if (!isRunning)
             {
-                UpdateBackBufferBitmap();
+                lock (__frontLocker)
+                    Graphics.FromImage(frontBitmap).DrawImageUnscaled(backBitmap, 0, 0);
                 drawPanel.Invalidate();
             }
         }
@@ -524,11 +600,11 @@ namespace BuddhabrotCL
             if (!isRunning)
                 switch(e.ChangedItem.Label)
                 {
-                    case "Filter":
+                    case "Type":
                     case "Factor":
                     case "Exposure":
                     case "Tint":
-                        UpdateBackBufferBitmap();
+                        UpdateBackBuffer();
                         drawPanel.Invalidate();
                         break;
                 }
@@ -556,6 +632,23 @@ namespace BuddhabrotCL
         private void MainForm_Load(object sender, EventArgs e)
         {
             SetLabelColumnWidth(propertyGrid, propertyGrid.Width / 2);
+            autoupdateMenuItem.Checked = autoupdateButton.Checked = autoUpdate;
+        }
+
+        private void quitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void autoupdateMenuItem_Click(object sender, EventArgs e)
+        {
+            autoUpdate = !autoUpdate;
+            autoupdateMenuItem.Checked = autoupdateButton.Checked = autoUpdate;
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(this, $"{AppFullName}\n(c) Nikolai Voronin 2011-2016\n\nhttps://github.com/nikvoronin/BuddhabrotCL", $"About {AppFullName}");
         }
     }
 }

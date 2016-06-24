@@ -5,12 +5,12 @@
 - Image tint: red, blue, green;
 - Image exposure.
 - Interpolation of the orbits (just for fun): linear, cosine, bicubic.
-- Anti-buddhabrot.
 - A lot of parameters.
-- Open source kernels. You can write your own and run it.
+- Open source kernels: buddhabrot, anti-brot, mandelbrot, etc. You can write your own and run it.
 - Selectable regions and zoom.
 - RNG inside OpenCL kernel. Tausworthe random number generator by L'Ecuyer.
 
+Screenshots are outdated except renders, that still magnificent.
 
 ![Buddhabrot](/doc/003.jpg)
 

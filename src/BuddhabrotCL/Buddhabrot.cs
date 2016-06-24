@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-
 using Cloo;
+using System.Collections.Generic;
 
 namespace BuddhabrotCL
 {
     public class Buddhabrot
     {
-        public const string DEFAULT_KERNEL_BUDDHABROT = "buddhabrot";
-
         public ComputePlatform clPlatform;
         public ComputeContext clContext;
         public ComputeContextPropertyList clProperties;
@@ -21,6 +19,8 @@ namespace BuddhabrotCL
         public ComputeBuffer<RGBA> cbuf_Result;
         public RGBA[] h_resultBuf;
         private GCHandle gc_resultBuffer;
+
+        List<string> functions = new List<string>();
 
         BrotParams bp;
 
@@ -37,12 +37,46 @@ namespace BuddhabrotCL
 
             h_resultBuf = new RGBA[bp.width * bp.height];
             gc_resultBuffer = GCHandle.Alloc(h_resultBuf, GCHandleType.Pinned);
+
+            int i = kernelSource.IndexOf("__kernel");
+            if (i > -1)
+            {
+                int j = kernelSource.IndexOf("(", i);
+                if (j > -1)
+                {
+                    string raw = kernelSource.Substring(i + 8, j - i - 8);
+                    string[] parts = raw.Trim().Split(' ');
+                    for(int k = parts.Length - 1; k != 0; k--)
+                    {
+                        if(!string.IsNullOrEmpty(parts[k]))
+                        {
+                            functions.Add(parts[k]);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         public void BuildKernels()
         {
-            clProgram.Build(null, null, null, IntPtr.Zero);
-            clkBbrot = clProgram.CreateKernel(DEFAULT_KERNEL_BUDDHABROT);
+            string msg = null;
+            foreach (string fn in functions)
+            {
+                try
+                {
+                    clProgram.Build(null, null, null, IntPtr.Zero);
+                    clkBbrot = clProgram.CreateKernel(fn);
+                    break;
+                }
+                catch(Exception ex)
+                {
+                    msg = ex.Message;
+                }
+            }
+
+            if (clkBbrot == null)
+                throw new Exception(msg);
         }
 
         public void AllocateBuffers()
