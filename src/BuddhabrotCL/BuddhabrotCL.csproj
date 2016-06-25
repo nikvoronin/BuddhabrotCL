@@ -50,7 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BrotParams.cs" />
+    <Compile Include="RenderParameters.cs" />
     <Compile Include="Buddhabrot.cs" />
     <Compile Include="CanvasPanel.cs">
       <SubType>Component</SubType>
@@ -79,52 +79,47 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="kernel\buddhabrot\cl_heuristic.c">
+    <None Include="kernel\Buddhabrot\cl_heuristic.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\buddhabrot\cl_classic.c">
+    <None Include="kernel\Buddhabrot\cl_classic.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\buddhabrot\cl_linear.c">
+    <None Include="kernel\Buddhabrot\Interpolation\cl_linear.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\buddhabrot\cl_cosine.c">
+    <None Include="kernel\Buddhabrot\Interpolation\cl_cosine.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\buddhabrot\cl_bicubic.c">
+    <None Include="kernel\Buddhabrot\Interpolation\cl_bicubic.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\buddhabrot\cl_anticubic.c">
+    <None Include="kernel\Buddhabrot\Interpolation\cl_anticubic.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\buddhabrot\cl_antibrot.c">
+    <None Include="kernel\Buddhabrot\cl_antibrot.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\buddhabrot\cl_antixor.c">
+    <None Include="kernel\Classic 2D\cl_mandelbrot.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\classic2d\cl_mandelbrot.c">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="kernel\rng\cl_taus88.c">
+    <None Include="kernel\RNG\cl_taus88.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -141,7 +136,7 @@
     <None Include="Resources\control-stop-square.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\rng\cl_xorshift.c">
+    <None Include="kernel\RNG\cl_xorshift.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -149,14 +144,22 @@
     <None Include="Resources\arrow-circle-double.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\classic2d\cl_julia.c">
+    <None Include="kernel\Classic 2D\cl_julia.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\classic2d\cl_newton.c">
+    <None Include="kernel\Classic 2D\cl_newton.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="kernel\Classic 2D\cl_kaliset.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\folder-horizontal.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

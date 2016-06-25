@@ -44,10 +44,10 @@ __kernel void buddhabrot(
     const uint  width,
     const uint  height,
     const float escapeOrbit,
-    const uint4 minColor,
+	const float2 cc,
+	const uint4 minColor,
     const uint4 maxColor,
     const uint isgrayscale,
-	const uint hackMode,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -81,19 +81,11 @@ __kernel void buddhabrot(
 
 	rngBuffer[id] = (uint4)(s1, s2, s3, b);
 
-    const float deltaRe = (reMax - reMin);
-    const float deltaIm = (imMax - imMin);
-
-	float shre = deltaRe / width / 2;
-	float shim = deltaIm / height / 2;
-
 	float2 c = (float2)(mix(-2, 2, rand.x), mix(-2, 2, rand.y));
 
 	if (!isInMSet(c, minIter, maxIter, escapeOrbit))
 	{
-		int x1, y1;
-		int x0 = -1;
-		int y0 = -1;
+		int x, y;
 		int iter = 0;
 		float2 z = 0.0;
 		int i;
@@ -101,12 +93,12 @@ __kernel void buddhabrot(
 		while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
 		{
 			z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0)) + c;
-			x1 = (width * (z.x - reMin) / deltaRe);
-			y1 = height - (height * (z.y - imMin) / deltaIm);
+			x = (z.x - reMin) / (reMax - reMin) * width;
+			y = height - (z.y - imMin) / (imMax - imMin) * height;
 
-			if ((iter > minIter) && (x1 > 0) && (y1 > 0) && (x1 < width) && (y1 < height))
+			if ((iter > minIter) && (x > 0) && (y > 0) && (x < width) && (y < height))
 			{
-				i = x1 + (y1 * width);
+				i = x + (y * width);
 
 				if (isgrayscale)
 					outputBuffer[i].x++;

@@ -8,10 +8,10 @@
 	const uint  width,
 	const uint  height,
 	const float escapeOrbit,
+	const float2 cc,
 	const uint4 minColor,
 	const uint4 maxColor,
 	const uint isgrayscale,
-	const uint hackMode,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {

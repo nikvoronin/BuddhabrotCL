@@ -65,7 +65,7 @@ namespace BuddhabrotCL.Properties {
         /// </summary>
         internal static System.Drawing.Bitmap arrow_circle_double {
             get {
-                object obj = ResourceManager.GetObject("arrow-circle-double", resourceCulture);
+                object obj = ResourceManager.GetObject("arrow_circle_double", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -85,7 +85,7 @@ namespace BuddhabrotCL.Properties {
         /// </summary>
         internal static System.Drawing.Bitmap control_stop_square {
             get {
-                object obj = ResourceManager.GetObject("control-stop-square", resourceCulture);
+                object obj = ResourceManager.GetObject("control_stop_square", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -96,6 +96,16 @@ namespace BuddhabrotCL.Properties {
         internal static System.Drawing.Bitmap disks {
             get {
                 object obj = ResourceManager.GetObject("disks", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap folder_horizontal {
+            get {
+                object obj = ResourceManager.GetObject("folder_horizontal", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

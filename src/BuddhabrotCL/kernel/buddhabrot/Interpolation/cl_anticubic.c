@@ -64,38 +64,38 @@ void line(
 
 //Check if choosen point is in MSet
 bool isInMSet(
-    const float2 c,
-    const uint minIter,
-    const uint maxIter,
-    const float escapeOrbit)
+	const float2 c,
+	const uint minIter,
+	const uint maxIter,
+	const float escapeOrbit)
 {
-    int iter = 0;
-    float2 z = 0.0;
+	int iter = 0;
+	float2 z = 0.0;
 
-    if( !(((c.x-0.25)*(c.x-0.25) + (c.y * c.y))*(((c.x-0.25)*(c.x-0.25) + (c.y * c.y))+(c.x-0.25)) < 0.25* c.y * c.y))  //main cardioid
-    {
-        if( !((c.x+1.0) * (c.x+1.0) + (c.y * c.y) < 0.0625))            //2nd order period bulb
-        {
-            if (!(( ((c.x+1.309)*(c.x+1.309)) + c.y*c.y) < 0.00345))    //smaller bulb left of the period-2 bulb
-            {
-                if (!((((c.x+0.125)*(c.x+0.125)) + (c.y-0.744)*(c.y-0.744)) < 0.0088))      // smaller bulb bottom of the main cardioid
-                {
-                    if (!((((c.x+0.125)*(c.x+0.125)) + (c.y+0.744)*(c.y+0.744)) < 0.0088))  //smaller bulb top of the main cardioid
-                    {
-                        while( (iter < maxIter) && (z.x*z.x + z.y*z.y < escapeOrbit) )       //Bruteforce check  
-                        {
-                            z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0)) + c;
-                            iter++;
-                        }
+	if (!(((c.x - 0.25)*(c.x - 0.25) + (c.y * c.y))*(((c.x - 0.25)*(c.x - 0.25) + (c.y * c.y)) + (c.x - 0.25)) < 0.25* c.y * c.y))  //main cardioid
+	{
+		if (!((c.x + 1.0) * (c.x + 1.0) + (c.y * c.y) < 0.0625))            //2nd order period bulb
+		{
+			if (!((((c.x + 1.309)*(c.x + 1.309)) + c.y*c.y) < 0.00345))    //smaller bulb left of the period-2 bulb
+			{
+				if (!((((c.x + 0.125)*(c.x + 0.125)) + (c.y - 0.744)*(c.y - 0.744)) < 0.0088))      // smaller bulb bottom of the main cardioid
+				{
+					if (!((((c.x + 0.125)*(c.x + 0.125)) + (c.y + 0.744)*(c.y + 0.744)) < 0.0088))  //smaller bulb top of the main cardioid
+					{
+						while ((iter < maxIter) && (z.x*z.x + z.y*z.y < escapeOrbit))       //Bruteforce check  
+						{
+							z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0)) + c;
+							iter++;
+						}
 
-						if( (iter > minIter) && (iter < maxIter))
-                            return false;
-                    }
-                }
-            }
-        }
-    }
-    return true;
+						if ((iter > minIter) && (iter < maxIter))
+							return false;
+					}
+				}
+			}
+		}
+	}
+	return true;
 }
 
 float signum(float value)
@@ -106,19 +106,19 @@ float signum(float value)
 }
 
 __kernel void buddhabrot(
-    const float reMin,
-    const float reMax,
-    const float imMin,
-    const float imMax,
-    const uint  minIter,
-    const uint  maxIter,
-    const uint  width,
-    const uint  height,
-    const float escapeOrbit,
-    const uint4 minColor,
-    const uint4 maxColor,
-    const uint isgrayscale,
-	const uint hackMode,
+	const float reMin,
+	const float reMax,
+	const float imMin,
+	const float imMax,
+	const uint  minIter,
+	const uint  maxIter,
+	const uint  width,
+	const uint  height,
+	const float escapeOrbit,
+	const float2 cc,
+	const uint4 minColor,
+	const uint4 maxColor,
+	const uint isgrayscale,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -152,19 +152,11 @@ __kernel void buddhabrot(
 
 	rngBuffer[id] = (uint4)(s1, s2, s3, b);
 
-    const float deltaRe = (reMax - reMin);
-    const float deltaIm = (imMax - imMin);
-
-	float shre = deltaRe / width / 2;
-	float shim = deltaIm / height / 2;
-
 	float2 c = (float2)(mix(-2, 2, rand.x), mix(-2, 2, rand.y));
 
 	if (isInMSet(c, minIter, maxIter, escapeOrbit))
 	{
 		int x, y;
-		int x0 = -1;
-		int y0 = -1;
 		float2 z0 = 0.0, z1 = 0.0, z2 = 0.0, z3 = 0.0;
 		int zn = 0;
 		int iter = 0;
@@ -174,8 +166,8 @@ __kernel void buddhabrot(
 		while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
 		{
 			z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0)) + c;
-			x = (width * (z.x - reMin) / deltaRe);
-			y = height - (height * (z.y - imMin) / deltaIm);
+			x = (z.x - reMin) / (reMax - reMin) * width;
+			y = height - (z.y - imMin) / (imMax - imMin) * height;
 
 			if (iter > minIter)
 			{

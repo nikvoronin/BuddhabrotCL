@@ -1,15 +1,4 @@
-﻿float cosine(
-	float y1,
-	float y2,
-	float d)
-{
-	float d2;
-
-	d2 = (1 - half_cos(d * 3.141592653f)) / 2;
-	return (y1 * (1 - d2) + y2 * d2);
-}
-
-void line(
+﻿void line(
 	int x0,
 	int y0,
 	int x1,
@@ -19,31 +8,35 @@ void line(
 	__global uint4*  out,
 	int p)
 {
-	int dx = abs(x1 - x0);
-	int sx = x0 < x1 ? 1 : -1;
-	float odx = 1.0f / (dx + 0.0000001f);
+	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	int err = (dx > dy ? dx : -dy) / 2, e2;
 
-	int x = x0, y = y0;
-	for (int i = 1; i < dx; i++)
+	for (;;)
 	{
-		if ((x > 0) && (y > 0) && (x < width) && (y < height))
+		if((x0 > 0) && (y0 > 0) && (x0 < width) && (y0 < height))
 			switch (p)
 			{
 			case 0:
-				out[x + (y * width)].x++;
+				out[x0 + (y0 * width)].x++;
 				break;
 			case 1:
-				out[x + (y * width)].y++;
+				out[x0 + (y0 * width)].y++;
 				break;
 			case 2:
-				out[x + (y * width)].z++;
+				out[x0 + (y0 * width)].z++;
 				break;
 			}
 
-		x = x0 + i * sx;
-		y = cosine(y0, y1, odx * (float)i);
+		if (x0 == x1 && y0 == y1) break;
+
+		e2 = err;
+
+		if (e2 >-dx) { err -= dy; x0 += sx; }
+		if (e2 < dy) { err += dx; y0 += sy; }
 	}
 }
+
 
 //Check if choosen point is in MSet
 bool isInMSet(
@@ -98,10 +91,10 @@ __kernel void buddhabrot(
     const uint  width,
     const uint  height,
     const float escapeOrbit,
-    const uint4 minColor,
+	const float2 cc,
+	const uint4 minColor,
     const uint4 maxColor,
     const uint isgrayscale,
-	const uint hackMode,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -135,12 +128,6 @@ __kernel void buddhabrot(
 
 	rngBuffer[id] = (uint4)(s1, s2, s3, b);
 
-    const float deltaRe = (reMax - reMin);
-    const float deltaIm = (imMax - imMin);
-
-	float shre = deltaRe / width / 2;
-	float shim = deltaIm / height / 2;
-
 	float2 c = (float2)(mix(-2, 2, rand.x), mix(-2, 2, rand.y));
 
 	if (!isInMSet(c, minIter, maxIter, escapeOrbit))
@@ -155,8 +142,8 @@ __kernel void buddhabrot(
 		while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
 		{
 			z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0)) + c;
-			x1 = (width * (z.x - reMin) / deltaRe);
-			y1 = height - (height * (z.y - imMin) / deltaIm);
+			x1 = (z.x - reMin) / (reMax - reMin) * width;
+			y1 = height - (z.y - imMin) / (imMax - imMin) * height;
 
 			if (iter > minIter)
 			{

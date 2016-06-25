@@ -28,7 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
+            this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.platformStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.coordStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.memoryStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -37,6 +39,7 @@
             this.saveImageFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.propertyGrid = new System.Windows.Forms.PropertyGrid();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
+            this.drawPanel = new BuddhabrotCL.CanvasPanel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.saveAsImageButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -45,7 +48,7 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.fullViewButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
-            this.autoupdateButton = new System.Windows.Forms.ToolStripButton();
+            this.autoRefreshButton = new System.Windows.Forms.ToolStripButton();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.mainMenu = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -57,7 +60,7 @@
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
-            this.autoupdateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.autoRefreshMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stopMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -68,8 +71,6 @@
             this.contextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.drawPanel = new BuddhabrotCL.CanvasPanel();
-            this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
@@ -93,6 +94,12 @@
             this.mainStatusStrip.Size = new System.Drawing.Size(984, 25);
             this.mainStatusStrip.TabIndex = 4;
             // 
+            // statusLabel
+            // 
+            this.statusLabel.Name = "statusLabel";
+            this.statusLabel.Size = new System.Drawing.Size(72, 20);
+            this.statusLabel.Text = "Loading...";
+            // 
             // platformStatusLabel
             // 
             this.platformStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
@@ -104,7 +111,7 @@
             // 
             this.coordStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
             this.coordStatusLabel.Name = "coordStatusLabel";
-            this.coordStatusLabel.Size = new System.Drawing.Size(338, 20);
+            this.coordStatusLabel.Size = new System.Drawing.Size(457, 20);
             this.coordStatusLabel.Spring = true;
             this.coordStatusLabel.Text = "[Re; Im] = -; -";
             this.coordStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -113,23 +120,23 @@
             // 
             this.memoryStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
             this.memoryStatusLabel.Name = "memoryStatusLabel";
-            this.memoryStatusLabel.Size = new System.Drawing.Size(145, 20);
-            this.memoryStatusLabel.Text = "Memory: -Mb < -Mb";
+            this.memoryStatusLabel.Size = new System.Drawing.Size(99, 20);
+            this.memoryStatusLabel.Text = "Memory: -Mb";
             // 
             // kernelTimeStatusLabel
             // 
             this.kernelTimeStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
             this.kernelTimeStatusLabel.Name = "kernelTimeStatusLabel";
-            this.kernelTimeStatusLabel.Size = new System.Drawing.Size(117, 20);
-            this.kernelTimeStatusLabel.Text = "Kernel time: -ms";
+            this.kernelTimeStatusLabel.Size = new System.Drawing.Size(88, 20);
+            this.kernelTimeStatusLabel.Text = "Core: -ms -*";
             this.kernelTimeStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // renderTimeStatusLabel
             // 
             this.renderTimeStatusLabel.Margin = new System.Windows.Forms.Padding(10, 3, 0, 2);
             this.renderTimeStatusLabel.Name = "renderTimeStatusLabel";
-            this.renderTimeStatusLabel.Size = new System.Drawing.Size(155, 20);
-            this.renderTimeStatusLabel.Text = "Render time: -- --:--:--";
+            this.renderTimeStatusLabel.Size = new System.Drawing.Size(142, 20);
+            this.renderTimeStatusLabel.Text = "Rendering: -- --:--:--";
             // 
             // saveImageFileDialog
             // 
@@ -166,6 +173,17 @@
             this.splitContainer.SplitterDistance = 764;
             this.splitContainer.TabIndex = 19;
             // 
+            // drawPanel
+            // 
+            this.drawPanel.Location = new System.Drawing.Point(0, 0);
+            this.drawPanel.Name = "drawPanel";
+            this.drawPanel.Size = new System.Drawing.Size(200, 100);
+            this.drawPanel.TabIndex = 0;
+            this.drawPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.drawPanel_Paint);
+            this.drawPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseDown);
+            this.drawPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseMove);
+            this.drawPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseUp);
+            // 
             // toolStrip1
             // 
             this.toolStrip1.BackColor = System.Drawing.SystemColors.Control;
@@ -178,7 +196,7 @@
             this.toolStripSeparator3,
             this.fullViewButton,
             this.toolStripSeparator8,
-            this.autoupdateButton});
+            this.autoRefreshButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
@@ -217,7 +235,7 @@
             // 
             this.stopButton.BackColor = System.Drawing.SystemColors.Control;
             this.stopButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.stopButton.Image = global::BuddhabrotCL.Properties.Resources.control_stop_square;
+            this.stopButton.Image = ((System.Drawing.Image)(resources.GetObject("stopButton.Image")));
             this.stopButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.stopButton.Name = "stopButton";
             this.stopButton.Size = new System.Drawing.Size(23, 22);
@@ -245,17 +263,17 @@
             this.toolStripSeparator8.Name = "toolStripSeparator8";
             this.toolStripSeparator8.Size = new System.Drawing.Size(6, 25);
             // 
-            // autoupdateButton
+            // autoRefreshButton
             // 
-            this.autoupdateButton.Checked = true;
-            this.autoupdateButton.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoupdateButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.autoupdateButton.Image = global::BuddhabrotCL.Properties.Resources.arrow_circle_double;
-            this.autoupdateButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.autoupdateButton.Name = "autoupdateButton";
-            this.autoupdateButton.Size = new System.Drawing.Size(23, 22);
-            this.autoupdateButton.Text = "Autoupdate";
-            this.autoupdateButton.Click += new System.EventHandler(this.autoupdateMenuItem_Click);
+            this.autoRefreshButton.Checked = true;
+            this.autoRefreshButton.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.autoRefreshButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.autoRefreshButton.Image = ((System.Drawing.Image)(resources.GetObject("autoRefreshButton.Image")));
+            this.autoRefreshButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.autoRefreshButton.Name = "autoRefreshButton";
+            this.autoRefreshButton.Size = new System.Drawing.Size(23, 22);
+            this.autoRefreshButton.Text = "Auto Refresh";
+            this.autoRefreshButton.Click += new System.EventHandler(this.autoupdateMenuItem_Click);
             // 
             // openFileDialog
             // 
@@ -327,7 +345,7 @@
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.defaultToolStripMenuItem,
             this.toolStripSeparator7,
-            this.autoupdateMenuItem});
+            this.autoRefreshMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(53, 24);
             this.viewToolStripMenuItem.Text = "&View";
@@ -336,24 +354,24 @@
             // 
             this.defaultToolStripMenuItem.Image = global::BuddhabrotCL.Properties.Resources.picture;
             this.defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            this.defaultToolStripMenuItem.Size = new System.Drawing.Size(157, 24);
+            this.defaultToolStripMenuItem.Size = new System.Drawing.Size(163, 24);
             this.defaultToolStripMenuItem.Text = "&Full View";
             this.defaultToolStripMenuItem.Click += new System.EventHandler(this.fullViewButton_Click);
             // 
             // toolStripSeparator7
             // 
             this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(154, 6);
+            this.toolStripSeparator7.Size = new System.Drawing.Size(160, 6);
             // 
-            // autoupdateMenuItem
+            // autoRefreshMenuItem
             // 
-            this.autoupdateMenuItem.Checked = true;
-            this.autoupdateMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoupdateMenuItem.Image = global::BuddhabrotCL.Properties.Resources.arrow_circle_double;
-            this.autoupdateMenuItem.Name = "autoupdateMenuItem";
-            this.autoupdateMenuItem.Size = new System.Drawing.Size(157, 24);
-            this.autoupdateMenuItem.Text = "&Autoupdate";
-            this.autoupdateMenuItem.Click += new System.EventHandler(this.autoupdateMenuItem_Click);
+            this.autoRefreshMenuItem.Checked = true;
+            this.autoRefreshMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.autoRefreshMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("autoRefreshMenuItem.Image")));
+            this.autoRefreshMenuItem.Name = "autoRefreshMenuItem";
+            this.autoRefreshMenuItem.Size = new System.Drawing.Size(163, 24);
+            this.autoRefreshMenuItem.Text = "&Auto Refresh";
+            this.autoRefreshMenuItem.Click += new System.EventHandler(this.autoupdateMenuItem_Click);
             // 
             // renderToolStripMenuItem
             // 
@@ -370,27 +388,27 @@
             // 
             this.startMenuItem.Image = global::BuddhabrotCL.Properties.Resources.control;
             this.startMenuItem.Name = "startMenuItem";
-            this.startMenuItem.Size = new System.Drawing.Size(135, 24);
+            this.startMenuItem.Size = new System.Drawing.Size(152, 24);
             this.startMenuItem.Text = "&Start";
             this.startMenuItem.Click += new System.EventHandler(this.startButton_Click);
             // 
             // stopMenuItem
             // 
-            this.stopMenuItem.Image = global::BuddhabrotCL.Properties.Resources.control_stop_square;
+            this.stopMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("stopMenuItem.Image")));
             this.stopMenuItem.Name = "stopMenuItem";
-            this.stopMenuItem.Size = new System.Drawing.Size(135, 24);
+            this.stopMenuItem.Size = new System.Drawing.Size(152, 24);
             this.stopMenuItem.Text = "St&op";
             this.stopMenuItem.Click += new System.EventHandler(this.stopButton_Click);
             // 
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(132, 6);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(149, 6);
             // 
             // platformMenuItem
             // 
             this.platformMenuItem.Name = "platformMenuItem";
-            this.platformMenuItem.Size = new System.Drawing.Size(135, 24);
+            this.platformMenuItem.Size = new System.Drawing.Size(152, 24);
             this.platformMenuItem.Text = "&Platform";
             // 
             // kernelsMenuItem
@@ -413,37 +431,20 @@
             // 
             this.contextToolStripMenuItem.Enabled = false;
             this.contextToolStripMenuItem.Name = "contextToolStripMenuItem";
-            this.contextToolStripMenuItem.Size = new System.Drawing.Size(129, 24);
+            this.contextToolStripMenuItem.Size = new System.Drawing.Size(152, 24);
             this.contextToolStripMenuItem.Text = "&Context";
             // 
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(126, 6);
+            this.toolStripSeparator5.Size = new System.Drawing.Size(149, 6);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(129, 24);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 24);
             this.aboutToolStripMenuItem.Text = "&About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
-            // drawPanel
-            // 
-            this.drawPanel.Location = new System.Drawing.Point(0, 0);
-            this.drawPanel.Name = "drawPanel";
-            this.drawPanel.Size = new System.Drawing.Size(200, 100);
-            this.drawPanel.TabIndex = 0;
-            this.drawPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.drawPanel_Paint);
-            this.drawPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseDown);
-            this.drawPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseMove);
-            this.drawPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.drawPanel_MouseUp);
-            // 
-            // statusLabel
-            // 
-            this.statusLabel.Name = "statusLabel";
-            this.statusLabel.Size = new System.Drawing.Size(72, 20);
-            this.statusLabel.Text = "Loading...";
             // 
             // MainForm
             // 
@@ -514,8 +515,8 @@
         private System.Windows.Forms.ToolStripMenuItem openKernelToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripButton autoupdateButton;
-        private System.Windows.Forms.ToolStripMenuItem autoupdateMenuItem;
+        private System.Windows.Forms.ToolStripButton autoRefreshButton;
+        private System.Windows.Forms.ToolStripMenuItem autoRefreshMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
         private System.Windows.Forms.ToolStripStatusLabel memoryStatusLabel;

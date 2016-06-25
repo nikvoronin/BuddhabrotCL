@@ -8,10 +8,10 @@
 	const uint  width,
 	const uint  height,
 	const float escapeOrbit,
+	const float2 cc,
 	const uint4 minColor,
 	const uint4 maxColor,
 	const uint isgrayscale,
-	const uint hackMode,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -45,12 +45,9 @@
 
 	rngBuffer[id] = (uint4)(s1, s2, s3, b);
 
-	const float deltaRe = (reMax - reMin);
-	const float deltaIm = (imMax - imMin);
-
 	float2 p = (float2)(mix(reMin, reMax, rand.x), mix(imMin, imMax, rand.y));
 	float2 z = p;
-	float2 c = (float2)(-0.75, 0.27015);
+	float2 c = cc;
 
 	int iter = 0;
 
@@ -60,8 +57,8 @@
 		iter++;
 	}
 
-	int x = (width * (p.x - reMin) / deltaRe);
-	int y = height - (height * (p.y - imMin) / deltaIm);
+	int x = (p.x - reMin) / (reMax - reMin) * width;
+	int y = height - (p.y - imMin) / (imMax - imMin) * height;
 
 	if ((x > 0) && (y > 0) && (x < width) && (y < height))
 	{

@@ -88,10 +88,10 @@ __kernel void newton(
 	const uint  width,
 	const uint  height,
 	const float escapeOrbit,
+	const float2 cc,
 	const uint4 minColor,
 	const uint4 maxColor,
 	const uint isgrayscale,
-	const uint hackMode,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -124,9 +124,6 @@ __kernel void newton(
 	rand.y = (float)((s1 ^ s2 ^ s3) * 2.3283064365e-10);
 
 	rngBuffer[id] = (uint4)(s1, s2, s3, b);
-
-	const float deltaRe = (reMax - reMin);
-	const float deltaIm = (imMax - imMin);
 
 	float2 c = (float2)(mix(reMin, reMax, rand.x), mix(imMin, imMax, rand.y));
 
@@ -166,16 +163,14 @@ __kernel void newton(
 			break;
 		}
 	}
-	int x = (width * (c.x - reMin) / deltaRe);
-	int y = height - (height * (c.y - imMin) / deltaIm);
+
+
+	int x = (c.x - reMin) / (reMax - reMin) * width;
+	int y = height - (c.y - imMin) / (imMax - imMin) * height;
+
 	if ((x > 0) && (y > 0) && (x < width) && (y < height))
 		switch (p)
 		{
-		case 0:
-			outputBuffer[x + y * width].x = 0;
-			outputBuffer[x + y * width].y = 0;
-			outputBuffer[x + y * width].z = 0;
-			break;
 		case 1:
 			outputBuffer[x + y * width].x += i;
 			outputBuffer[x + y * width].y += i;

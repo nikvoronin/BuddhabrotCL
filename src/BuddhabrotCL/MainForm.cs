@@ -9,6 +9,7 @@ using Cloo;
 using System.Reflection;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using BuddhabrotCL.Properties;
 
 namespace BuddhabrotCL
 {
@@ -19,12 +20,12 @@ namespace BuddhabrotCL
         const string APP_NAME = "BuddhabrotCL";
         string AppFullName = APP_NAME;
 
-        BrotParams bp = new BrotParams();
+        RenderParameters bp = new RenderParameters();
         ComputePlatform cPlatform = null;
         Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.White));
         bool isRunning = false;
         Stopwatch hpet = new Stopwatch();
-        bool autoUpdate = true;
+        bool autoRefresh = true;
 
         Buddhabrot bb;
 
@@ -75,6 +76,7 @@ namespace BuddhabrotCL
             foreach (DirectoryInfo di in dirs)
             {
                 ToolStripMenuItem dItem = (ToolStripMenuItem)parentMenuItem.DropDownItems.Add(di.Name);
+                dItem.Image = Resources.folder_horizontal;
                 KernelDirs(di, dItem);
             }
 
@@ -242,7 +244,7 @@ namespace BuddhabrotCL
                 if (__should_update && ui != null)
                 {
                     __should_update = false;
-                    if (autoUpdate)
+                    if (autoRefresh)
                         UpdateBackBuffer();
 
                     if (token.IsCancellationRequested)
@@ -259,13 +261,13 @@ namespace BuddhabrotCL
                                     kernelTimeStatusLabel.Text = $"Core: {ktime}ms {hpet_count}*";
                             }
 
-                            memoryStatusLabel.Text = $"Memory: {(Process.GetCurrentProcess().WorkingSet64 / 1024.0 / 1024.0).ToString("0.00")}Mb";
+                            memoryStatusLabel.Text = $"Memory: {(Process.GetCurrentProcess().PrivateMemorySize64 / 1024.0 / 1024.0).ToString("0.00")}Mb";
                             hpet_count = 0;
 
                             TimeSpan ts = TimeSpan.FromMilliseconds(hpet.ElapsedMilliseconds);
                             renderTimeStatusLabel.Text = $"Rendering: {ts.ToString(@"dd\ hh\:mm\:ss")}";
 
-                            if (autoUpdate)
+                            if (autoRefresh)
                                 drawPanel.Invalidate();
                         }, null);
                 } // if
@@ -348,18 +350,18 @@ namespace BuddhabrotCL
             int l = bb.h_resultBuf.Length;
             if (bp.isGrayscale)
                 for (int i = 0; i < l; i++)
-                    maxR = Math.Max(bb.h_resultBuf[i].r, maxR);
+                    maxR = Math.Max(bb.h_resultBuf[i].x, maxR);
             else
                 for (int i = 0; i < l; i++)
                 {
-                    maxR = Math.Max(bb.h_resultBuf[i].r, maxR);
-                    maxG = Math.Max(bb.h_resultBuf[i].g, maxG);
-                    maxB = Math.Max(bb.h_resultBuf[i].b, maxB);
+                    maxR = Math.Max(bb.h_resultBuf[i].x, maxR);
+                    maxG = Math.Max(bb.h_resultBuf[i].y, maxG);
+                    maxB = Math.Max(bb.h_resultBuf[i].z, maxB);
                 }
 
             int bitLen = backBitmap.PixelFormat == PixelFormat.Format24bppRgb ? 3 : 4;
 
-            RGBA[] h_resBuf = bb.h_resultBuf;
+            Vector4[] h_resBuf = bb.h_resultBuf;
 
             BitmapData bitmapData = backBitmap.LockBits(
                 region,
@@ -381,12 +383,12 @@ namespace BuddhabrotCL
 
                     byte r, g, b;
                     if (bp.isGrayscale)
-                        r = g = b = ByteClamp(scaleR * Fx(h_resBuf[i].r, bp.Factor));
+                        r = g = b = ByteClamp(scaleR * Fx(h_resBuf[i].x, bp.Factor));
                     else
                     {
-                        r = ByteClamp(scaleR * Fx(h_resBuf[i].r, bp.Factor));
-                        g = ByteClamp(scaleG * Fx(h_resBuf[i].g, bp.Factor));
-                        b = ByteClamp(scaleB * Fx(h_resBuf[i].b, bp.Factor));
+                        r = ByteClamp(scaleR * Fx(h_resBuf[i].x, bp.Factor));
+                        g = ByteClamp(scaleG * Fx(h_resBuf[i].y, bp.Factor));
+                        b = ByteClamp(scaleB * Fx(h_resBuf[i].z, bp.Factor));
                     }
 
                     switch(bp.Tint)
@@ -497,8 +499,8 @@ namespace BuddhabrotCL
 
         private void saveAsImageButton_Click(object sender, EventArgs e)
         {
-            bool uc = autoUpdate;
-            autoUpdate = false;
+            bool uc = autoRefresh;
+            autoRefresh = false;
 
             if (!isRunning)
             {
@@ -509,7 +511,7 @@ namespace BuddhabrotCL
             if (saveImageFileDialog.ShowDialog() == DialogResult.OK)
                 backBitmap.Save(saveImageFileDialog.FileName);
 
-            autoUpdate = uc;
+            autoRefresh = uc;
         }
 
         private void drawPanel_Paint(object sender, PaintEventArgs e)
@@ -582,12 +584,14 @@ namespace BuddhabrotCL
 
         private float ToRe(int x)
         {
-            return (Math.Abs(bp.reMax - bp.reMin)) / bp.width * x + bp.reMin;
+            float dx = x / (float)bp.width;
+            return bp.reMin + (Math.Abs(bp.reMax - bp.reMin)) * dx;
         }
 
         private float ToIm(int y)
         {
-            return -((Math.Abs(bp.imMax - bp.imMin)) / bp.height * y + bp.imMin);
+            float dy = y / (float)bp.height;
+            return bp.imMax - (Math.Abs(bp.imMax - bp.imMin)) * dy;
         }
 
         private void drawPanel_MouseUp(object sender, MouseEventArgs e)
@@ -670,7 +674,7 @@ namespace BuddhabrotCL
         private void MainForm_Load(object sender, EventArgs e)
         {
             SetLabelColumnWidth(propertyGrid, propertyGrid.Width / 2);
-            autoupdateMenuItem.Checked = autoupdateButton.Checked = autoUpdate;
+            autoRefreshMenuItem.Checked = autoRefreshButton.Checked = autoRefresh;
             Status = AppStatus.Ready;
         }
 
@@ -681,13 +685,13 @@ namespace BuddhabrotCL
 
         private void autoupdateMenuItem_Click(object sender, EventArgs e)
         {
-            autoUpdate = !autoUpdate;
-            autoupdateMenuItem.Checked = autoupdateButton.Checked = autoUpdate;
+            autoRefresh = !autoRefresh;
+            autoRefreshMenuItem.Checked = autoRefreshButton.Checked = autoRefresh;
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(this, $"{AppFullName}\n(c) Nikolai Voronin 2011-2016\n\nhttps://github.com/nikvoronin/BuddhabrotCL", $"About {AppFullName}");
+            MessageBox.Show(this, $"{AppFullName}\n\n(c) Nikolai Voronin 2011-2016\nUnder the MIT License (MIT)\n\nhttps://github.com/nikvoronin/BuddhabrotCL", "About");
         }
     }
 }

@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace BuddhabrotCL
 {
-    public class BrotParams
+    public class RenderParameters
     {
         [Category("OpenCL")]
         [DisplayName("Workers Count")]
@@ -75,6 +75,9 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         public bool IsGrayscale { get; set; } = false;
         public bool isGrayscale;
         [Category("Fractal")]
+        [DisplayName("C-constant")]
+        public Vector2F C { get; set; } = new Vector2F { x = -0.75f, y = 0.27015f };
+        [Category("Fractal")]
         [DisplayName("Floor Low")]
         public float Limit_Lo { get; set; } = .33f;
         [Category("Fractal")]
@@ -85,10 +88,6 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         [DisplayName("Escape Orbit")]
         public float EscapeOrbit { get; set; } = 4f;
         public float escapeOrbit;
-        [DisplayName("Region Mode")]
-        [Category("Fractal")]
-        [Description("Calculate points inside view region only. Classic kernel only!")]
-        public bool IsHackMode { get; set; }
 
         [Category("Fractal")]
         [DisplayName("Iterations Min")]
@@ -117,19 +116,19 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         public int width;
         public int height;
 
-        public RGBA minColor;
-        public RGBA maxColor;
+        public Vector4 minColor;
+        public Vector4 maxColor;
 
         public void RecalculateColors()
         {
-            minColor.r = (uint)(iterMin);
-            maxColor.r = (uint)(iterMin + (iterMax - iterMin) * Limit_Lo);
+            minColor.x = 0;
+            maxColor.x = (uint)((iterMax - iterMin) * Limit_Lo);
 
-            minColor.g = maxColor.r;
-            maxColor.g = (uint)(iterMin + (iterMax - iterMin) * Limit_Mid);
+            minColor.y = maxColor.x;
+            maxColor.y = (uint)(iterMin + (iterMax - iterMin) * Limit_Mid);
 
-            minColor.b = maxColor.g;
-            maxColor.b = (uint)(iterMax);
+            minColor.z = maxColor.y;
+            maxColor.z = (uint)(iterMax);
         }
     }
 }

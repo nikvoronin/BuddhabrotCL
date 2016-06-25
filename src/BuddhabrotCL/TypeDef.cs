@@ -1,4 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace BuddhabrotCL
 {
@@ -38,12 +42,33 @@ namespace BuddhabrotCL
         public uint w;
     };
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RGBA
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public class Vector2F
     {
-        public uint r;
-        public uint g;
-        public uint b;
-        public uint a;
+        [DisplayName("X Re")]
+        public float x { get; set; }
+        [DisplayName("Y Im")]
+        public float y { get; set; }
+
+        [Browsable(false)]
+        public Vector2f Value
+        {
+            get
+            {
+                return new Vector2f { x = x, y = y };
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"{x}; {y}";
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vector2f
+    {
+        public float x;
+        public float y;
     };
 }

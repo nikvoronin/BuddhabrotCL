@@ -1,64 +1,47 @@
-﻿float bcube(
-	float y0,
+﻿float cosine(
 	float y1,
 	float y2,
-	float y3,
 	float d)
 {
-	float a0, a1, a2, a3, d2;
+	float d2;
 
-	d2 = d * d;
-
-	a0 = 0.5 * y3 - 1.5 * y2 - 0.5 * y0 + 1.5 * y1;
-	a1 = y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3;
-	a2 = 0.5 * y2 - 0.5 * y0;
-	a3 = y1;
-
-	return (a0 * d * d2 + a1 * d2 + a2 * d + a3);
+	d2 = (1 - half_cos(d * 3.141592653f)) / 2;
+	return (y1 * (1 - d2) + y2 * d2);
 }
 
 void line(
-	float2 z0,
-	float2 z1,
-	float2 z2,
-	float2 z3,
+	int x0,
+	int y0,
+	int x1,
+	int y1,
 	uint width,
 	uint height,
 	__global uint4*  out,
 	int p)
 {
-	int dx = abs((int)z2.x - (int)z1.x);
-	int sx = z1.x < z2.x ? 1 : -1;
+	int dx = abs(x1 - x0);
+	int sx = x0 < x1 ? 1 : -1;
 	float odx = 1.0f / (dx + 0.0000001f);
 
-	int x = z1.x, y = z1.y;
-	int oy = -1;
-	int i = 0;
-	while (i <= dx)
+	int x = x0, y = y0;
+	for (int i = 1; i < dx; i++)
 	{
 		if ((x > 0) && (y > 0) && (x < width) && (y < height))
-		{
-			if (oy != y)
+			switch (p)
 			{
-				switch (p)
-				{
-				case 0:
-					out[x + (y * width)].x++;
-					break;
-				case 1:
-					out[x + (y * width)].y++;
-					break;
-				case 2:
-					out[x + (y * width)].z++;
-					break;
-				}
+			case 0:
+				out[x + (y * width)].x++;
+				break;
+			case 1:
+				out[x + (y * width)].y++;
+				break;
+			case 2:
+				out[x + (y * width)].z++;
+				break;
 			}
-		}
 
-		oy = y;
-		x = z1.x + i * sx;
-		y = bcube(z0.y, z1.y, z2.y, z3.y, odx * (float)i);
-		i++;
+		x = x0 + i * sx;
+		y = cosine(y0, y1, odx * (float)i);
 	}
 }
 
@@ -115,10 +98,10 @@ __kernel void buddhabrot(
     const uint  width,
     const uint  height,
     const float escapeOrbit,
-    const uint4 minColor,
+	const float2 cc,
+	const uint4 minColor,
     const uint4 maxColor,
     const uint isgrayscale,
-	const uint hackMode,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -152,21 +135,13 @@ __kernel void buddhabrot(
 
 	rngBuffer[id] = (uint4)(s1, s2, s3, b);
 
-    const float deltaRe = (reMax - reMin);
-    const float deltaIm = (imMax - imMin);
-
-	float shre = deltaRe / width / 2;
-	float shim = deltaIm / height / 2;
-
 	float2 c = (float2)(mix(-2, 2, rand.x), mix(-2, 2, rand.y));
 
 	if (!isInMSet(c, minIter, maxIter, escapeOrbit))
 	{
-		int x, y;
+		int x1, y1;
 		int x0 = -1;
 		int y0 = -1;
-		float2 z0 = 0.0, z1 = 0.0, z2 = 0.0, z3 = 0.0;
-		int zn = 0;
 		int iter = 0;
 		float2 z = 0.0;
 		int i;
@@ -174,8 +149,8 @@ __kernel void buddhabrot(
 		while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
 		{
 			z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0)) + c;
-			x = (width * (z.x - reMin) / deltaRe);
-			y = height - (height * (z.y - imMin) / deltaIm);
+			x1 = (z.x - reMin) / (reMax - reMin) * width;
+			y1 = height - (z.y - imMin) / (imMax - imMin) * height;
 
 			if (iter > minIter)
 			{
@@ -189,31 +164,11 @@ __kernel void buddhabrot(
 						if ((iter > minColor.z) && (iter < maxColor.z))
 							p = 2;
 
-				switch (zn)
-				{
-				case 0:
-					z1 = (float2)((float)x, (float)y);
-					zn = 1;
-					break;
-				case 1:
-					z2 = (float2)((float)x, (float)y);
-					zn = 2;
-					break;
-				case 2:
-					z3 = (float2)((float)x, (float)y);
-					zn = 3;
-					break;
-				case 3:
-					z0 = z1;
-					z1 = z2;
-					z2 = z3;
-					z3 = (float2)((float)x, (float)y);
-					break;
-				} // switch
+				if (x0 > -1 && y0 > -1 && p > -1)
+					line(x0, y0, x1, y1, width, height, outputBuffer, p);
 
-				if (zn == 3 && p > -1)
-					line(z0, z1, z2, z3, width, height, outputBuffer, p);
-			} // if iter
+				x0 = x1; y0 = y1;
+			} // if
 
 			iter++;
 		} // while

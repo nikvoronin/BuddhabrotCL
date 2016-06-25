@@ -16,15 +16,15 @@ namespace BuddhabrotCL
         public ComputeEventList clEvents;
 
         public ComputeBuffer<Vector4> cbuf_Rng;
-        public ComputeBuffer<RGBA> cbuf_Result;
-        public RGBA[] h_resultBuf;
+        public ComputeBuffer<Vector4> cbuf_Result;
+        public Vector4[] h_resultBuf;
         private GCHandle gc_resultBuffer;
 
         List<string> functions = new List<string>();
 
-        BrotParams bp;
+        RenderParameters bp;
 
-        public Buddhabrot(ComputePlatform cPlatform, string kernelSource, BrotParams bp)
+        public Buddhabrot(ComputePlatform cPlatform, string kernelSource, RenderParameters bp)
         {
             this.bp = bp;
 
@@ -35,7 +35,7 @@ namespace BuddhabrotCL
             clEvents = new ComputeEventList();
             clProgram = new ComputeProgram(clContext, new string[] { kernelSource });
 
-            h_resultBuf = new RGBA[bp.width * bp.height];
+            h_resultBuf = new Vector4[bp.width * bp.height];
             gc_resultBuffer = GCHandle.Alloc(h_resultBuf, GCHandleType.Pinned);
 
             int i = kernelSource.IndexOf("__kernel");
@@ -101,7 +101,7 @@ namespace BuddhabrotCL
                     seeds);
 
             cbuf_Result =
-                new ComputeBuffer<RGBA>(
+                new ComputeBuffer<Vector4>(
                     clContext,
                     ComputeMemoryFlags.ReadOnly,
                     bp.width * bp.height);
@@ -118,10 +118,10 @@ namespace BuddhabrotCL
             clKernel.SetValueArgument(6, (uint)bp.width);
             clKernel.SetValueArgument(7, (uint)bp.height);
             clKernel.SetValueArgument(8, bp.escapeOrbit);
-            clKernel.SetValueArgument(9, bp.minColor);
-            clKernel.SetValueArgument(10, bp.maxColor);
-            clKernel.SetValueArgument(11, bp.isGrayscale ? 1u : 0u);
-            clKernel.SetValueArgument(12, bp.IsHackMode ? 1u : 0u);
+            clKernel.SetValueArgument(9, bp.C.Value);
+            clKernel.SetValueArgument(10, bp.minColor);
+            clKernel.SetValueArgument(11, bp.maxColor);
+            clKernel.SetValueArgument(12, bp.isGrayscale ? 1u : 0u);
             clKernel.SetMemoryArgument(13, cbuf_Rng);
             clKernel.SetMemoryArgument(14, cbuf_Result);
         }
