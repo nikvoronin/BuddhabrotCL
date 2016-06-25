@@ -10,7 +10,9 @@
 - Image tint, exposure, visual parameters.
 - Interpolation of the orbits (just for fun): linear, cosine, bicubic.
 
-Screenshots are outdated except renders, that still magnificent.
+## Buddhabrot
+
+Some screenshots are outdated except renders, that still magnificent.
 
 ![Buddhabrot](/doc/003.jpg)
 
@@ -21,4 +23,24 @@ Screenshots are outdated except renders, that still magnificent.
 ![Bicubic interpolation](/doc/001.jpg)
 
 
+## Classic figures
 
+Why not to draw classic figures?
+
+### Julia
+
+![Julia](https://img-fotki.yandex.ru/get/26439/97637398.e/0_e1f20_104ef6b_orig.jpg)
+
+### Mandelbrot
+
+![Mandelbrot](https://img-fotki.yandex.ru/get/60682/97637398.e/0_e1f22_9597831a_orig.jpg)
+
+### Newton
+
+![Newton](https://img-fotki.yandex.ru/get/120031/97637398.e/0_e1f23_4e45caa_orig.jpg)
+
+### Modern Kaliset
+
+...but still 2D
+
+![Kaliset](https://img-fotki.yandex.ru/get/96932/97637398.e/0_e1f21_f8931d10_orig.jpg)
