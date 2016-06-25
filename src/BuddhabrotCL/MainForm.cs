@@ -95,8 +95,8 @@ namespace BuddhabrotCL
             {
                 switch(value)
                 {
-                    case AppStatus.Finishing:
-                        statusLabel.Text = "Finishing...";
+                    case AppStatus.Polishing:
+                        statusLabel.Text = "Polishing...";
                         statusLabel.BackColor = Color.Yellow;
                         break;
                     case AppStatus.Loading:
@@ -302,7 +302,7 @@ namespace BuddhabrotCL
         private async void stopButton_Click(object sender, EventArgs e)
         {
             cts?.Cancel();
-            Status = AppStatus.Finishing;
+            Status = AppStatus.Polishing;
             stopButton.Enabled = stopMenuItem.Enabled = false;
 
             await Task.Run(() => { while (thPainter.IsAlive) Thread.Sleep(0); });
@@ -637,7 +637,7 @@ namespace BuddhabrotCL
             }
         }
 
-        private void propertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        private async void propertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             if (!isRunning)
                 switch(e.ChangedItem.Label)
@@ -646,8 +646,12 @@ namespace BuddhabrotCL
                     case "Factor":
                     case "Exposure":
                     case "Tint":
-                        UpdateBackBuffer();
+                        Status = AppStatus.Polishing;
+                        startButton.Enabled = false;
+                        await Task.Run(() => { UpdateBackBuffer(); });
                         drawPanel.Invalidate();
+                        startButton.Enabled = true;
+                        Status = AppStatus.Ready;
                         break;
                 }
         }

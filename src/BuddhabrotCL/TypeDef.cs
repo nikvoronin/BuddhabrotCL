@@ -11,7 +11,7 @@ namespace BuddhabrotCL
         Loading,
         Ready,
         Rendering,
-        Finishing
+        Polishing
     }
 
     public enum FxFilter
