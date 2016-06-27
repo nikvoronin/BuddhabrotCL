@@ -12,7 +12,6 @@ namespace BuddhabrotCL
         public ComputeKernel clKernel;
         public ComputeProgram clProgram;
         public ComputeCommandQueue clCommands;
-        public ComputeEventList clEvents;
 
         public ComputeBuffer<Vector4> cbuf_Rng;
         public ComputeBuffer<Vector4> cbuf_Result;
@@ -31,7 +30,6 @@ namespace BuddhabrotCL
             clProperties = new ComputeContextPropertyList(clPlatform);
             clContext = new ComputeContext(clPlatform.Devices, clProperties, null, IntPtr.Zero);
             clCommands = new ComputeCommandQueue(clContext, clContext.Devices[0], ComputeCommandQueueFlags.None);
-            clEvents = new ComputeEventList();
             clProgram = new ComputeProgram(clContext, new string[] { kernelSource });
 
             h_resultBuf = new Vector4[bp.width * bp.height];
@@ -123,13 +121,13 @@ namespace BuddhabrotCL
 
         public void ExecuteKernel_Buddhabrot()
         {
-            clCommands.Execute(clKernel, null, new long[] { bp.workers }, null, clEvents);
+            clCommands.Execute(clKernel, null, new long[] { bp.workers }, null, null);
         }
 
 
         public void ReadResult()
         {
-            clCommands.Read(cbuf_Result, true, 0, bp.width * bp.height, gc_resultBuffer.AddrOfPinnedObject(), clEvents);
+            clCommands.Read(cbuf_Result, true, 0, bp.width * bp.height, gc_resultBuffer.AddrOfPinnedObject(), null);
             clCommands.Finish();
         }
 

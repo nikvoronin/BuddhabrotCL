@@ -33,13 +33,6 @@
     return 1;
 }
 
-float signum(float value)
-{
-	if (value > 0) return 1;
-	if (value < 0) return -1;
-	return 0;
-}
-
 __kernel void buddhabrot(
     const float reMin,
     const float reMax,
@@ -90,9 +83,6 @@ __kernel void buddhabrot(
 	float rew = reMax - reMin;
 	float imh = imMax - imMin;
 
-	float shre = rew / width * 0.5f;
-	float shim = imh / height * 0.5f;
-
 	rew = 1.0f / rew;
 	imh = 1.0f / imh;
 
@@ -102,6 +92,8 @@ __kernel void buddhabrot(
 	float alpha = 0.0f;
 	uint j = 0;
 	uint atscr, lastatscr = 0;
+	float rr = rew / width * 0.5f;
+	float ri = imh / height * 0.5f;
 	while((j < jMax) && (j < 500))
 	{
 		lastatscr = atscr;
@@ -150,19 +142,17 @@ __kernel void buddhabrot(
 		if (!atscr)
 			break;
 		else {
-			if (lastatscr != atscr)
+			if (atscr != lastatscr)
 				if (atscr > lastatscr)
-					jMax += 10;
+					jMax += 1;
 				else
-				{
-					alpha += 1.047197551196597f;
-					shre *= signum(half_cos(alpha));
-					shim *= signum(half_sin(alpha));
-					jMax -= 10;
-				}
+					jMax -= 3;
 
-			c.x += shre;
-			c.y += shim;
+			c.x += rr * half_cos(alpha);
+			c.y += ri * half_sin(alpha);
+			rr *= 1.25f;
+			ri *= 1.25f;
+			alpha += 0.785398163397458f;
 		}
 
 		j++;
