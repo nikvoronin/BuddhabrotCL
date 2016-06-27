@@ -11,6 +11,6 @@ namespace BuddhabrotCL
         [Category("Filter")]
         public FxFilter Type { get; set; } = FxFilter.Sqrt;
         [Category("Filter")]
-        public Tint Tint { get; set; } = Tint.BGR;
+        public Tint Tint { get; set; } = Tint.RGB;
     }
 }

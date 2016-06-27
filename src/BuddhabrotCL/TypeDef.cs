@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace BuddhabrotCL
@@ -25,12 +22,12 @@ namespace BuddhabrotCL
 
     public enum Tint
     {
-        BGR,
-        BRG,
         RGB,
-        RBG,
         GRB,
-        GBR
+        BGR,
+        GBR,
+        BRG,
+        RBG
     }
 
     [StructLayout(LayoutKind.Sequential)]

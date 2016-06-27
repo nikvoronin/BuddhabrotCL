@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Threading;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.IO;
 using Cloo;
 using System.Reflection;
@@ -364,78 +363,92 @@ namespace BuddhabrotCL
                     maxB = Math.Max(bb.h_resultBuf[i].z, maxB);
                 }
 
-            int bitLen = backBitmap.PixelFormat == PixelFormat.Format24bppRgb ? 3 : 4;
-
             Vector4[] h_resBuf = bb.h_resultBuf;
 
             BitmapData bitmapData = backBitmap.LockBits(
                 region,
                 ImageLockMode.WriteOnly,
                 backBitmap.PixelFormat);
-            byte[] bitmapBuf = new byte[bitmapData.Stride * bitmapData.Height];
-            Marshal.Copy(bitmapData.Scan0, bitmapBuf, 0, bitmapBuf.Length);
 
             float scaleR = 255f * fp.Exposure / Fx(maxR, fp.Factor);
             float scaleG = bp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxG, fp.Factor);
             float scaleB = bp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxB, fp.Factor);
 
-            for (int y = 0; y < region.Height; y++)
+            int stride = bitmapData.Stride;
+            IntPtr Scan0 = bitmapData.Scan0;
+            unsafe
             {
-                for (int x = 0; x < region.Width; x++)
+                uint* p = (uint*)(void*)Scan0;
+                uint argb = 0;
+
+                for (int y = 0; y < region.Height; y++)
                 {
-                    int i = (x + region.X) + (y + region.Y) * bp.width;
-                    int j = bitmapData.Stride * y + x * bitLen;
-
-                    byte r, g, b;
-                    if (bp.isGrayscale)
-                        r = g = b = ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor));
-                    else
+                    int ryw = (y + region.Y) * bp.width;
+                    for (int x = 0; x < region.Width; x++)
                     {
-                        r = ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor));
-                        g = ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor));
-                        b = ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor));
-                    }
+                        int i = x + region.X + ryw;
 
-                    switch(fp.Tint)
-                    {
-                        case Tint.BGR:
-                            bitmapBuf[j + 0] = b;
-                            bitmapBuf[j + 1] = g;
-                            bitmapBuf[j + 2] = r;
-                            break;
-                        case Tint.RGB:
-                            bitmapBuf[j + 0] = r;
-                            bitmapBuf[j + 1] = g;
-                            bitmapBuf[j + 2] = b;
-                            break;
-                        case Tint.BRG:
-                            bitmapBuf[j + 0] = b;
-                            bitmapBuf[j + 1] = r;
-                            bitmapBuf[j + 2] = g;
-                            break;
-                        case Tint.RBG:
-                            bitmapBuf[j + 0] = r;
-                            bitmapBuf[j + 1] = b;
-                            bitmapBuf[j + 2] = g;
-                            break;
-                        case Tint.GRB:
-                            bitmapBuf[j + 0] = g;
-                            bitmapBuf[j + 1] = r;
-                            bitmapBuf[j + 2] = b;
-                            break;
-                        case Tint.GBR:
-                            bitmapBuf[j + 0] = g;
-                            bitmapBuf[j + 1] = b;
-                            bitmapBuf[j + 2] = r;
-                            break;
-                    }
+                        if (bp.isGrayscale)
+                        {
+                            argb = ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor));
+                            argb |= argb << 8;
+                            argb |= argb << 8;
+                            argb |= 0xFF000000;
+                        }
+                        else
+                        {
+                            switch (fp.Tint)
+                            {
+                                case Tint.RGB:
+                                    argb =
+                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor)) << 16) |
+                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor)) << 8) |
+                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor))) |
+                                        0xFF000000;
+                                    break;
+                                case Tint.BGR:
+                                    argb =
+                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor)) << 16) |
+                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor)) << 8) |
+                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor))) |
+                                        0xFF000000;
+                                    break;
+                                case Tint.GRB:
+                                    argb =
+                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor)) << 16) |
+                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor)) << 8) |
+                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor))) |
+                                        0xFF000000;
+                                    break;
+                                case Tint.GBR:
+                                    argb =
+                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor)) << 16) |
+                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor)) << 8) |
+                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor))) |
+                                        0xFF000000;
+                                    break;
+                                case Tint.BRG:
+                                    argb =
+                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor)) << 16) |
+                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor)) << 8) |
+                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor))) |
+                                        0xFF000000;
+                                    break;
+                                case Tint.RBG:
+                                    argb =
+                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor)) << 16) |
+                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor)) << 8) |
+                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor))) |
+                                        0xFF000000;
+                                    break;
+                            }
+                        }
 
-                    if (bitLen == 4)
-                        bitmapBuf[j + 3] = 255;
-                } // for x
-            } // for y
+                        p[i] = argb;
+                    } // for x
+                } // for y
+            }
 
-            Marshal.Copy(bitmapBuf, 0, bitmapData.Scan0, bitmapData.Stride * bitmapData.Height);
             backBitmap.UnlockBits(bitmapData);
 
             lock (__frontLocker)
@@ -445,7 +458,7 @@ namespace BuddhabrotCL
             }
         }
 
-        private byte ByteClamp(float value)
+        private uint ByteClamp(float value)
         {
             if (value > 255f)
                 value = 255f;
@@ -453,7 +466,7 @@ namespace BuddhabrotCL
                 if (value < 0f)
                     value = 0f;
 
-            return (byte)value;
+            return (uint)value;
         }
 
         Rectangle GetCursorRect(Point cur)
