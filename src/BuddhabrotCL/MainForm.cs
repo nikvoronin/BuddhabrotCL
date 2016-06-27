@@ -13,14 +13,18 @@ using BuddhabrotCL.Properties;
 
 namespace BuddhabrotCL
 {
-    public partial class MainForm : Form
+    public partial class MainForm : Form, IDisposable
     {
         const string DEFAULT_KERNEL_FILENAME = "/buddhabrot/cl_heuristic.c";
         const string DEFAULT_KERNEL_DIR = "kernel";
         const string APP_NAME = "BuddhabrotCL";
+        const int CURSOR_DIVW = 10;
+        const int CURSOR_DIVH = 10;
+
         string AppFullName = APP_NAME;
 
-        RenderParameters bp = new RenderParameters();
+        Render bp = new Render();
+        Filter fp = new Filter();
         ComputePlatform cPlatform = null;
         Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.White));
         bool isRunning = false;
@@ -67,6 +71,7 @@ namespace BuddhabrotCL
             stopButton.Enabled = stopMenuItem.Enabled = false;
 
             propertyGrid.SelectedObject = bp;
+            filterGrid.SelectedObject = fp;
             KernelFilename = kernelFilename;
         }
 
@@ -197,8 +202,8 @@ namespace BuddhabrotCL
                 return;
             }
 
-            startButton.Enabled = startMenuItem.Enabled = false;
-            stopButton.Enabled = stopMenuItem.Enabled = true;                        
+            propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = platformMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = false;
+            stopButton.Enabled = stopMenuItem.Enabled = true;       
 
             if (backBitmap != null)
             {
@@ -303,7 +308,7 @@ namespace BuddhabrotCL
         {
             cts?.Cancel();
             Status = AppStatus.Polishing;
-            stopButton.Enabled = stopMenuItem.Enabled = false;
+            filterGrid.Enabled = stopButton.Enabled = stopMenuItem.Enabled = false;
 
             await Task.Run(() => { while (thPainter.IsAlive) Thread.Sleep(0); });
 
@@ -311,13 +316,13 @@ namespace BuddhabrotCL
 
             isRunning = false;
             hpet.Stop();
-            startButton.Enabled = startMenuItem.Enabled = true;
+            filterGrid.Enabled = propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = platformMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = true;
             Status = AppStatus.Ready;
         }
 
         private float Fx(float x, float factor = 1.0f)
         {
-            switch (bp.Filter)
+            switch (fp.Type)
             {                
                 case FxFilter.Sqrt:
                     return (float)Math.Sqrt(factor * x);                
@@ -370,9 +375,9 @@ namespace BuddhabrotCL
             byte[] bitmapBuf = new byte[bitmapData.Stride * bitmapData.Height];
             Marshal.Copy(bitmapData.Scan0, bitmapBuf, 0, bitmapBuf.Length);
 
-            float scaleR = 255f * bp.Exposure / Fx(maxR, bp.Factor);
-            float scaleG = bp.isGrayscale ? 0f : 255f * bp.Exposure / Fx(maxG, bp.Factor);
-            float scaleB = bp.isGrayscale ? 0f : 255f * bp.Exposure / Fx(maxB, bp.Factor);
+            float scaleR = 255f * fp.Exposure / Fx(maxR, fp.Factor);
+            float scaleG = bp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxG, fp.Factor);
+            float scaleB = bp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxB, fp.Factor);
 
             for (int y = 0; y < region.Height; y++)
             {
@@ -383,15 +388,15 @@ namespace BuddhabrotCL
 
                     byte r, g, b;
                     if (bp.isGrayscale)
-                        r = g = b = ByteClamp(scaleR * Fx(h_resBuf[i].x, bp.Factor));
+                        r = g = b = ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor));
                     else
                     {
-                        r = ByteClamp(scaleR * Fx(h_resBuf[i].x, bp.Factor));
-                        g = ByteClamp(scaleG * Fx(h_resBuf[i].y, bp.Factor));
-                        b = ByteClamp(scaleB * Fx(h_resBuf[i].z, bp.Factor));
+                        r = ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor));
+                        g = ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor));
+                        b = ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor));
                     }
 
-                    switch(bp.Tint)
+                    switch(fp.Tint)
                     {
                         case Tint.BGR:
                             bitmapBuf[j + 0] = b;
@@ -470,25 +475,28 @@ namespace BuddhabrotCL
         {
             //float k = (float)bp.width / bp.height;
             Graphics g = Graphics.FromImage(frontBitmap);
-            Rectangle rect = GetCursorRect(dragCur);
+            Rectangle rect = GetCursorRect(dragCurrent);
 
             g.FillRectangle(
                 dimBrush,
                 rect
                 );
 
+            int cw = rect.Width / CURSOR_DIVW;
+            int ch = rect.Height / CURSOR_DIVH;
+
             g.DrawLine(Pens.White,
-                dragStart.X - 10,
+                dragStart.X - cw,
                 dragStart.Y,
-                dragStart.X + 10,
+                dragStart.X + cw,
                 dragStart.Y
                 );
 
             g.DrawLine(Pens.White,
                 dragStart.X,
-                dragStart.Y - 10,
+                dragStart.Y - ch,
                 dragStart.X,
-                dragStart.Y + 10
+                dragStart.Y + ch
                 );
         }
 
@@ -526,32 +534,23 @@ namespace BuddhabrotCL
             if (bb == null)
                 return;
 
-            int hNX = bp.width >> 1;
-            int hNY = bp.height >> 1;
-
             string xstr = ToRe(e.X).ToString("0.00000000").Replace(",", ".");
             string ystr = ToIm(e.Y).ToString("0.00000000").Replace(",", ".");
             coordStatusLabel.Text = $"[Re; Im]= {xstr}; {ystr}";
 
-            if (isDrag)
+            if (isDrag && !isRunning)
             {
-                if (!isRunning)
+                Rectangle r = GetCursorRect(dragCurrent);
+                if ((r.Width > 0) && (r.Height > 0))
                 {
-                    Rectangle r = GetCursorRect(dragCur);
-                    if ((r.Width > 0) && (r.Height > 0))
-                    {
-                        lock (__frontLocker)
-                            Graphics.FromImage(frontBitmap).DrawImage(backBitmap, r, r, GraphicsUnit.Pixel);
-                    }
+                    lock (__frontLocker)
+                        Graphics.FromImage(frontBitmap).DrawImage(backBitmap, r, r, GraphicsUnit.Pixel);
                 }
 
-                dragCur = e.Location;
+                dragCurrent = e.Location;
 
-                if (!isRunning)
-                {
-                    DrawCursor();
-                    drawPanel.Invalidate();
-                }
+                DrawCursor();
+                drawPanel.Invalidate();
             }
         }
 
@@ -564,7 +563,7 @@ namespace BuddhabrotCL
         bool isDrag = false;
         Point dragStart;
         Point dragStop;
-        Point dragCur;
+        Point dragCurrent;
         private void drawPanel_MouseDown(object sender, MouseEventArgs e)
         {
             if (backBitmap == null)
@@ -575,11 +574,11 @@ namespace BuddhabrotCL
                 Rectangle r = GetCursorRect(dragStop);
                 lock (__frontLocker)
                     Graphics.FromImage(frontBitmap).DrawImage(backBitmap, r, r, GraphicsUnit.Pixel);
-            }
 
-            dragStart = e.Location;
-            dragStop = dragCur = dragStart;
-            isDrag = true;
+                dragStart = e.Location;
+                dragStop = dragCurrent = dragStart;
+                isDrag = true;
+            }
         }
 
         private float ToRe(int x)
@@ -596,7 +595,7 @@ namespace BuddhabrotCL
 
         private void drawPanel_MouseUp(object sender, MouseEventArgs e)
         {
-            if (isDrag)
+            if (isDrag && !isRunning)
             {
                 dragStop = e.Location;
 
@@ -613,8 +612,7 @@ namespace BuddhabrotCL
 
                     propertyGrid.Refresh();
 
-                    if (!isRunning)
-                        drawPanel.Invalidate();
+                    drawPanel.Invalidate();
                 }
             }
 
@@ -637,23 +635,9 @@ namespace BuddhabrotCL
             }
         }
 
-        private async void propertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        private void propertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
-            if (!isRunning)
-                switch(e.ChangedItem.Label)
-                {
-                    case "Type":
-                    case "Factor":
-                    case "Exposure":
-                    case "Tint":
-                        Status = AppStatus.Polishing;
-                        startButton.Enabled = false;
-                        await Task.Run(() => { UpdateBackBuffer(); });
-                        drawPanel.Invalidate();
-                        startButton.Enabled = true;
-                        Status = AppStatus.Ready;
-                        break;
-                }
+            propertyGrid.Refresh();
         }
 
         public static void SetLabelColumnWidth(PropertyGrid grid, int width)
@@ -678,6 +662,7 @@ namespace BuddhabrotCL
         private void MainForm_Load(object sender, EventArgs e)
         {
             SetLabelColumnWidth(propertyGrid, propertyGrid.Width / 2);
+            SetLabelColumnWidth(filterGrid, propertyGrid.Width / 2);
             autoRefreshMenuItem.Checked = autoRefreshButton.Checked = autoRefresh;
             Status = AppStatus.Ready;
         }
@@ -696,6 +681,47 @@ namespace BuddhabrotCL
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MessageBox.Show(this, $"{AppFullName}\n\n(c) Nikolai Voronin 2011-2016\nUnder the MIT License (MIT)\n\nhttps://github.com/nikvoronin/BuddhabrotCL", "About");
+        }
+
+        private void goGithubMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("https://github.com/nikvoronin/BuddhabrotCL");
+        }
+
+        private async void filterGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            if (!isRunning)
+                switch (e.ChangedItem.Label)
+                {
+                    case "Type":
+                    case "Factor":
+                    case "Exposure":
+                    case "Tint":
+                        Status = AppStatus.Polishing;
+                        filterGrid.Enabled = propertyGrid.Enabled = startMenuItem.Enabled = startButton.Enabled = false;
+                        await Task.Run(() => { UpdateBackBuffer(); });
+                        drawPanel.Invalidate();
+                        filterGrid.Enabled = propertyGrid.Enabled = startMenuItem.Enabled = startButton.Enabled = true;
+                        Status = AppStatus.Ready;
+                        break;
+                }
+        }
+
+        public new void Dispose()
+        {
+            Dispose(true);
+            Dispose2(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose2(bool disposing)
+        {
+            if (disposing)
+            {
+                dimBrush.Dispose();
+                if (bb != null)
+                    bb.Dispose();
+            }
         }
     }
 }

@@ -45,7 +45,7 @@
 
 	rngBuffer[id] = (uint4)(s1, s2, s3, b);
 
-	float2 c = (float2)(mix(0, width - 1, rand.x), mix(0, height - 1, rand.y));
+	float2 c = (float2)(mix(0.0f, width - 1.0f, rand.x), mix(0.0f, height - 1.0f, rand.y));
 	uint i = (uint)(c.x + c.y * width);
 
 	outputBuffer[i].x += b;

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Cloo;
-using System.Collections.Generic;
 
 namespace BuddhabrotCL
 {
-    public class Buddhabrot
+    public class Buddhabrot : IDisposable
     {
         public ComputePlatform clPlatform;
         public ComputeContext clContext;
@@ -20,11 +19,11 @@ namespace BuddhabrotCL
         public Vector4[] h_resultBuf;
         private GCHandle gc_resultBuffer;
 
-        List<string> functions = new List<string>();
+        string kernelFunc = "buddhabrot";
 
-        RenderParameters bp;
+        Render bp;
 
-        public Buddhabrot(ComputePlatform cPlatform, string kernelSource, RenderParameters bp)
+        public Buddhabrot(ComputePlatform cPlatform, string kernelSource, Render bp)
         {
             this.bp = bp;
 
@@ -50,29 +49,25 @@ namespace BuddhabrotCL
                     {
                         if(!string.IsNullOrEmpty(parts[k]))
                         {
-                            functions.Add(parts[k]);
+                            kernelFunc = parts[k];
                             break;
-                        }
-                    }
-                }
-            }
+                        } // if
+                    } // for k
+                } // if j
+            } // if i
         }
 
         public void BuildKernels()
         {
             string msg = null;
-            foreach (string fn in functions)
+            try
             {
-                try
-                {
-                    clProgram.Build(null, null, null, IntPtr.Zero);
-                    clKernel = clProgram.CreateKernel(fn);
-                    break;
-                }
-                catch(Exception ex)
-                {
-                    msg = ex.Message;
-                }
+                clProgram.Build(null, null, null, IntPtr.Zero);
+                clKernel = clProgram.CreateKernel(kernelFunc);
+            }
+            catch(Exception ex)
+            {
+                msg = ex.Message;
             }
 
             if (clKernel == null)
@@ -136,6 +131,25 @@ namespace BuddhabrotCL
         {
             clCommands.Read(cbuf_Result, true, 0, bp.width * bp.height, gc_resultBuffer.AddrOfPinnedObject(), clEvents);
             clCommands.Finish();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                clCommands.Dispose();
+                clKernel.Dispose();
+                clProgram.Dispose();
+                clContext.Dispose();
+                cbuf_Result.Dispose();
+                cbuf_Rng.Dispose();
+            }
         }
     }
 }

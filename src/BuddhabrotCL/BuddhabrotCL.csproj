@@ -50,7 +50,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="RenderParameters.cs" />
+    <Compile Include="Filter.cs" />
+    <Compile Include="Render.cs" />
     <Compile Include="Buddhabrot.cs" />
     <Compile Include="CanvasPanel.cs">
       <SubType>Component</SubType>

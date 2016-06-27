@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
 [assembly: AssemblyTitle("BuddhabrotCL")]
-[assembly: AssemblyDescription("Multicore OpenCL version of the Buddhabrot renderer")]
+[assembly: AssemblyDescription("The Buddhabrot renderer with help of OpenCL")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Nikolai Voronin")]
 [assembly: AssemblyProduct("BuddhabrotCL")]
 [assembly: AssemblyCopyright("Copyright © 2011-2016 Nikolai Voronin")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("1.7")]
+[assembly: AssemblyVersion("1.7.1")]

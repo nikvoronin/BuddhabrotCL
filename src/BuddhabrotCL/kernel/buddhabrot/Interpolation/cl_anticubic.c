@@ -9,9 +9,9 @@
 
 	d2 = d * d;
 
-	a0 = 0.5 * y3 - 1.5 * y2 - 0.5 * y0 + 1.5 * y1;
-	a1 = y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3;
-	a2 = 0.5 * y2 - 0.5 * y0;
+	a0 = 0.5f * y3 - 1.5f * y2 - 0.5f * y0 + 1.5f * y1;
+	a1 = y0 - 2.5f * y1 + 2.0f * y2 - 0.5f * y3;
+	a2 = 0.5f * y2 - 0.5f * y0;
 	a3 = y1;
 
 	return (a0 * d * d2 + a1 * d2 + a2 * d + a3);
@@ -62,47 +62,39 @@ void line(
 	}
 }
 
-//Check if choosen point is in MSet
-bool isInMSet(
+uint isInMSet(
 	const float2 c,
 	const uint minIter,
 	const uint maxIter,
 	const float escapeOrbit)
 {
 	int iter = 0;
-	float2 z = 0.0;
+	float2 z = 0.0f;
 
-	if (!(((c.x - 0.25)*(c.x - 0.25) + (c.y * c.y))*(((c.x - 0.25)*(c.x - 0.25) + (c.y * c.y)) + (c.x - 0.25)) < 0.25* c.y * c.y))  //main cardioid
+	if (!(((c.x - 0.25f)*(c.x - 0.25f) + (c.y * c.y))*(((c.x - 0.25f)*(c.x - 0.25f) + (c.y * c.y)) + (c.x - 0.25f)) < 0.25f* c.y * c.y))  //main cardioid
 	{
-		if (!((c.x + 1.0) * (c.x + 1.0) + (c.y * c.y) < 0.0625))            //2nd order period bulb
+		if (!((c.x + 1.0f) * (c.x + 1.0f) + (c.y * c.y) < 0.0625f))            //2nd order period bulb
 		{
-			if (!((((c.x + 1.309)*(c.x + 1.309)) + c.y*c.y) < 0.00345))    //smaller bulb left of the period-2 bulb
+			if (!((((c.x + 1.309f)*(c.x + 1.309f)) + c.y*c.y) < 0.00345f))    //smaller bulb left of the period-2 bulb
 			{
-				if (!((((c.x + 0.125)*(c.x + 0.125)) + (c.y - 0.744)*(c.y - 0.744)) < 0.0088))      // smaller bulb bottom of the main cardioid
+				if (!((((c.x + 0.125f)*(c.x + 0.125f)) + (c.y - 0.744f)*(c.y - 0.744f)) < 0.0088f))      // smaller bulb bottom of the main cardioid
 				{
-					if (!((((c.x + 0.125)*(c.x + 0.125)) + (c.y + 0.744)*(c.y + 0.744)) < 0.0088))  //smaller bulb top of the main cardioid
+					if (!((((c.x + 0.125f)*(c.x + 0.125f)) + (c.y + 0.744f)*(c.y + 0.744f)) < 0.0088f))  //smaller bulb top of the main cardioid
 					{
 						while ((iter < maxIter) && (z.x*z.x + z.y*z.y < escapeOrbit))       //Bruteforce check  
 						{
-							z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0)) + c;
+							z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + c;
 							iter++;
 						}
 
 						if ((iter > minIter) && (iter < maxIter))
-							return false;
+							return 0;
 					}
 				}
 			}
 		}
 	}
-	return true;
-}
-
-float signum(float value)
-{
-	if (value > 0) return 1;
-	if (value < 0) return -1;
-	return 0;
+	return 1;
 }
 
 __kernel void buddhabrot(
@@ -152,20 +144,20 @@ __kernel void buddhabrot(
 
 	rngBuffer[id] = (uint4)(s1, s2, s3, b);
 
-	float2 c = (float2)(mix(-2, 2, rand.x), mix(-2, 2, rand.y));
+	float2 c = (float2)(mix(-2.0f, 2.0f, rand.x), mix(-2.0f, 2.0f, rand.y));
 
 	if (isInMSet(c, minIter, maxIter, escapeOrbit))
 	{
 		int x, y;
-		float2 z0 = 0.0, z1 = 0.0, z2 = 0.0, z3 = 0.0;
+		float2 z0 = 0.0f, z1 = 0.0f, z2 = 0.0f, z3 = 0.0f;
 		int zn = 0;
 		int iter = 0;
-		float2 z = 0.0;
+		float2 z = 0.0f;
 		int i;
 
 		while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
 		{
-			z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0)) + c;
+			z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + c;
 			x = (z.x - reMin) / (reMax - reMin) * width;
 			y = height - (z.y - imMin) / (imMax - imMin) * height;
 

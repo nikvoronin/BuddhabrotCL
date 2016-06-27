@@ -1,6 +1,7 @@
 # BuddhabrotCL
 
 - Multicore OpenCL rendering with fast heuristic kernel.
+- Tested on Intel OpenCL 1.2, NVidia OpenCL 1.2 CUDA 8.
 - Open source kernels: buddhabrot, anti-brot, mandelbrot, julia, newton, kaliset. You can write your own and run it.
 - Rendering huge images, up to 120Mpx, about 11000x11000px image size.
 - A lot of parameters.
@@ -9,6 +10,18 @@
 - Image filters: linear, sqrt, log, ln, exp.
 - Image tint, exposure, visual parameters.
 - Interpolation of the orbits (just for fun): linear, cosine, bicubic.
+
+
+## Display driver stopped responding and has recovered
+
+https://support.microsoft.com/en-us/kb/2665946
+
+
+### Short answer
+1. regedit
+2. HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers
+3. Create: QWORD (64-bit) or DWORD (32-bit) TdrDelay = 8
+
 
 ## Buddhabrot
 

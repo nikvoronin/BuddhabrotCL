@@ -3,22 +3,12 @@ using System.ComponentModel;
 
 namespace BuddhabrotCL
 {
-    public class RenderParameters
+    public class Render
     {
         [Category("OpenCL")]
         [DisplayName("Workers Count")]
         public uint Workers { get; set; } = 1000000;
         public uint workers;
-
-        [Category("Filter")]
-        public float Factor { get; set; } = 1.0f;
-        [Category("Filter")]
-        public float Exposure { get; set; } = 1.0f;
-        [Category("Filter")]
-        [DisplayName("Type")]
-        public FxFilter Filter { get; set; } = FxFilter.Sqrt;
-        [Category("Filter")]
-        public Tint Tint { get; set; } = Tint.BGR;
 
         [Category("View")]
         [Description(@"ReMin; ReMax; ImMin; ImMax
