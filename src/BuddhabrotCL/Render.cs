@@ -81,10 +81,10 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
 
         [Category("Fractal")]
         [DisplayName("Iterations Min")]
-        public int IterationsMin { get; set; } = 20;
+        public int IterationsMin { get; set; } = 0;
         [Category("Fractal")]
         [DisplayName("Iterations Max")]
-        public int IterationsMax { get; set; } = 2000;
+        public int IterationsMax { get; set; } = 80;
         public int iterMin;
         public int iterMax;
 

@@ -19,6 +19,7 @@ namespace BuddhabrotCL
         const string APP_NAME = "BuddhabrotCL";
         const int CURSOR_DIVW = 10;
         const int CURSOR_DIVH = 10;
+        const int THREAD_PAINT_SLEEP_INTERVAL = 500;
 
         string AppFullName = APP_NAME;
 
@@ -276,8 +277,8 @@ namespace BuddhabrotCL
                         }, null);
                 } // if
 
-                if(hpet.ElapsedTicks - hpet_ubbb_st < 500 * TimeSpan.TicksPerMillisecond)
-                    Thread.Sleep(500);
+                if(hpet.ElapsedTicks - hpet_ubbb_st < THREAD_PAINT_SLEEP_INTERVAL * TimeSpan.TicksPerMillisecond)
+                    Thread.Sleep(THREAD_PAINT_SLEEP_INTERVAL);
             } // while
         }
 
