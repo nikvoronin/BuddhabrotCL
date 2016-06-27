@@ -276,7 +276,7 @@ namespace BuddhabrotCL
                         }, null);
                 } // if
 
-                if(hpet.ElapsedTicks - hpet_ubbb_st < 5000000000)
+                if(hpet.ElapsedTicks - hpet_ubbb_st < 500 * TimeSpan.TicksPerMillisecond)
                     Thread.Sleep(500);
             } // while
         }
@@ -339,7 +339,8 @@ namespace BuddhabrotCL
 
         private void UpdateBackBuffer()
         {
-            UpdateBackBuffer(new Rectangle(0, 0, backBitmap.Width, backBitmap.Height));
+            if (backBitmap != null)
+                UpdateBackBuffer(new Rectangle(0, 0, backBitmap.Width, backBitmap.Height));
         }
 
         private void UpdateBackBuffer(Rectangle region)
