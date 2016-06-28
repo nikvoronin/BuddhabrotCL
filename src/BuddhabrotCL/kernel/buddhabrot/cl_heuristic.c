@@ -1,39 +1,4 @@
-﻿uint isInMSet(
-    const float2 c,
-    const uint minIter,
-    const uint maxIter,
-    const float escapeOrbit)
-{
-    int iter = 0;
-    float2 z = 0.0f;
-
-    if( !(((c.x-0.25f)*(c.x-0.25f) + (c.y * c.y))*(((c.x-0.25f)*(c.x-0.25f) + (c.y * c.y))+(c.x-0.25f)) < 0.25f* c.y * c.y))  //main cardioid
-    {
-        if( !((c.x+1.0f) * (c.x+1.0f) + (c.y * c.y) < 0.0625f))            //2nd order period bulb
-        {
-            if (!(( ((c.x+1.309f)*(c.x+1.309f)) + c.y*c.y) < 0.00345f))    //smaller bulb left of the period-2 bulb
-            {
-                if (!((((c.x+0.125f)*(c.x+0.125f)) + (c.y-0.744f)*(c.y-0.744f)) < 0.0088f))      // smaller bulb bottom of the main cardioid
-                {
-                    if (!((((c.x+0.125f)*(c.x+0.125f)) + (c.y+0.744f)*(c.y+0.744f)) < 0.0088f))  //smaller bulb top of the main cardioid
-                    {
-                        while( (iter < maxIter) && (z.x*z.x + z.y*z.y < escapeOrbit) )       //Bruteforce check  
-                        {
-                            z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + c;
-                            iter++;
-                        }
-
-						if( (iter > minIter) && (iter < maxIter))
-                            return 0;
-                    }
-                }
-            }
-        }
-    }
-    return 1;
-}
-
-__kernel void buddhabrot(
+﻿__kernel void buddhabrot(
     const float reMin,
     const float reMax,
     const float imMin,
@@ -94,18 +59,48 @@ __kernel void buddhabrot(
 	uint atscr, lastatscr = 0;
 	float rr = rew / width * 0.5f;
 	float ri = imh / height * 0.5f;
+	uint isInMSet;
+	int iter = 0;
+	float2 z = 0.0f;
 	while((j < jMax) && (j < 500))
 	{
 		lastatscr = atscr;
 		atscr = 0;
+		iter = 0;
+		z = 0.0f;
 
-		if (isInMSet(c, minIter, maxIter, escapeOrbit))
+		isInMSet = 1;
+		if (!(((c.x - 0.25f)*(c.x - 0.25f) + (c.y * c.y))*(((c.x - 0.25f)*(c.x - 0.25f) + (c.y * c.y)) + (c.x - 0.25f)) < 0.25f* c.y * c.y))  //main cardioid
+		{
+			if (!((c.x + 1.0f) * (c.x + 1.0f) + (c.y * c.y) < 0.0625f))            //2nd order period bulb
+			{
+				if (!((((c.x + 1.309f)*(c.x + 1.309f)) + c.y*c.y) < 0.00345f))    //smaller bulb left of the period-2 bulb
+				{
+					if (!((((c.x + 0.125f)*(c.x + 0.125f)) + (c.y - 0.744f)*(c.y - 0.744f)) < 0.0088f))      // smaller bulb bottom of the main cardioid
+					{
+						if (!((((c.x + 0.125f)*(c.x + 0.125f)) + (c.y + 0.744f)*(c.y + 0.744f)) < 0.0088f))  //smaller bulb top of the main cardioid
+						{
+							while ((iter < maxIter) && (z.x*z.x + z.y*z.y < escapeOrbit))       //Bruteforce check  
+							{
+								z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + c;
+								iter++;
+							}
+
+							if ((iter > minIter) && (iter < maxIter))
+								isInMSet = 0;
+						}
+					}
+				}
+			}
+		}
+
+		if (isInMSet)
 			break;
 		else
 		{
 			int x, y;
-			int iter = 0;
-			float2 z = 0.0f;
+			iter = 0;
+			z = 0.0f;
 			int i;
 
 			while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
@@ -136,24 +131,23 @@ __kernel void buddhabrot(
 
 				iter++;
 			} // while
-		} // if
+		} // else if
 		
 		// heuristics
 		if (!atscr)
 			break;
-		else {
+		else 
 			if (atscr != lastatscr)
 				if (atscr > lastatscr)
 					jMax += 1;
 				else
 					jMax -= 3;
 
-			c.x += rr * half_cos(alpha);
-			c.y += ri * half_sin(alpha);
-			rr *= 1.25f;
-			ri *= 1.25f;
-			alpha += 0.785398163397458f;
-		}
+		c.x += rr * half_cos(alpha);
+		c.y += ri * half_sin(alpha);
+		rr *= 1.25f;
+		ri *= 1.25f;
+		alpha += 0.785398163397448f;
 
 		j++;
 	} // while j
