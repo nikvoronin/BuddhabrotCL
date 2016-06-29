@@ -1,4 +1,20 @@
-﻿__kernel void buddhabrot(
+﻿// (c) Nikolai Voronin 2011-2016
+// https://github.com/nikvoronin/BuddhabrotCL
+
+float frand(uint* s1, uint* s2, uint* s3)
+{
+	uint b;
+	b = (((*s1 << 13) ^ *s1) >> 19);
+	*s1 = (((*s1 & 4294967294) << 12) ^ b);
+	b = (((*s2 << 2) ^ *s2) >> 25);
+	*s2 = (((*s2 & 4294967288) << 4) ^ b);
+	b = (((*s3 << 3) ^ *s3) >> 11);
+	*s3 = (((*s3 & 4294967280) << 17) ^ b);
+
+	return (float)((*s1 ^ *s2 ^ *s3) * 2.3283064365e-10);
+}
+
+__kernel void buddhabrot(
     const float reMin,
     const float reMax,
     const float imMin,
@@ -23,30 +39,14 @@
 	uint s3 = rngBuffer[id].z;
 
 	float2 rand;
-
-	uint b;
-	b = (((s1 << 13) ^ s1) >> 19);
-	s1 = (((s1 & 4294967294) << 12) ^ b);
-	b = (((s2 << 2) ^ s2) >> 25);
-	s2 = (((s2 & 4294967288) << 4) ^ b);
-	b = (((s3 << 3) ^ s3) >> 11);
-	s3 = (((s3 & 4294967280) << 17) ^ b);
-
-	rand.x = (float)((s1 ^ s2 ^ s3) * 2.3283064365e-10);
-
-	b = (((s1 << 13) ^ s1) >> 19);
-	s1 = (((s1 & 4294967294) << 12) ^ b);
-	b = (((s2 << 2) ^ s2) >> 25);
-	s2 = (((s2 & 4294967288) << 4) ^ b);
-	b = (((s3 << 3) ^ s3) >> 11);
-	s3 = (((s3 & 4294967280) << 17) ^ b);
-
-	rand.y = (float)((s1 ^ s2 ^ s3) * 2.3283064365e-10);
-
-	rngBuffer[id] = (uint4)(s1, s2, s3, b);
+	rand.x = frand(&s1, &s2, &s3);
+	rand.y = frand(&s1, &s2, &s3);
 
 	float rew = reMax - reMin;
 	float imh = imMax - imMin;
+
+	float rr = rew / width;
+	float ri = imh / height;
 
 	rew = 1.0f / rew;
 	imh = 1.0f / imh;
@@ -57,8 +57,6 @@
 	float alpha = 0.0f;
 	uint j = 0;
 	uint atscr, lastatscr = 0;
-	float rr = rew / width * 0.5f;
-	float ri = imh / height * 0.5f;
 	uint isInMSet;
 	int iter = 0;
 	float2 z = 0.0f;
@@ -94,9 +92,7 @@
 			}
 		}
 
-		if (isInMSet)
-			break;
-		else
+		if (!isInMSet)
 		{
 			int x, y;
 			iter = 0;
@@ -143,12 +139,15 @@
 				else
 					jMax -= 3;
 
-		c.x += rr * half_cos(alpha);
-		c.y += ri * half_sin(alpha);
-		rr *= 1.25f;
-		ri *= 1.25f;
-		alpha += 0.785398163397448f;
+		float q = frand(&s1, &s2, &s3);
+		alpha = q * 2.f * 3.1415926f;
+		c.x += rr * cos(alpha);
+		c.y += ri * sin(alpha);
+		rr *= 1.5f;
+		ri *= 1.5f;
 
 		j++;
 	} // while j
+
+	rngBuffer[id] = (uint4)(s1, s2, s3, 0);
 }

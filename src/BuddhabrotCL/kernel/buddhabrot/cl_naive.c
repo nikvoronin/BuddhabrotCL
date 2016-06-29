@@ -1,4 +1,7 @@
-﻿uint isInMSet(
+﻿// (c) Nikolai Voronin 2011-2016
+// https://github.com/nikvoronin/BuddhabrotCL
+
+uint isInMSet(
     const float2 c,
     const uint minIter,
     const uint maxIter,

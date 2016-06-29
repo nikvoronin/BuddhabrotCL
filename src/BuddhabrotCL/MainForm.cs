@@ -245,7 +245,7 @@ namespace BuddhabrotCL
         {
             while (!token.IsCancellationRequested)
             {
-                long hpet_ubbb_st = hpet.ElapsedTicks;
+                long hpet_ubbb_st = hpet.ElapsedMilliseconds;
                 if (__should_update && ui != null)
                 {
                     __should_update = false;
@@ -277,7 +277,7 @@ namespace BuddhabrotCL
                         }, null);
                 } // if
 
-                if(hpet.ElapsedTicks - hpet_ubbb_st < THREAD_PAINT_SLEEP_INTERVAL * TimeSpan.TicksPerMillisecond)
+                if(hpet.ElapsedMilliseconds - hpet_ubbb_st < THREAD_PAINT_SLEEP_INTERVAL)
                     Thread.Sleep(THREAD_PAINT_SLEEP_INTERVAL);
             } // while
         }

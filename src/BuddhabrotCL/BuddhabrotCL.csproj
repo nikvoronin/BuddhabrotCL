@@ -84,7 +84,7 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\Buddhabrot\cl_classic.c">
+    <None Include="kernel\Buddhabrot\cl_naive.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -163,6 +163,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="kernel\Buddhabrot\cl_heuristic.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="kernel\Buddhabrot\cl_mh.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
