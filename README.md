@@ -1,9 +1,8 @@
 # BuddhabrotCL
 
-- Multicore OpenCL rendering with fast heuristic kernel.
+- Multicore OpenCL rendering with Metropolis-Hastings kernel.
 - Tested on Intel OpenCL 1.2, NVidia OpenCL 1.2 CUDA 8.
 - Open source kernels: buddhabrot, anti-brot, mandelbrot, julia, newton, kaliset. You can write your own and run it.
-- Metropolis-Hastings algorithm.
 - Rendering huge images, up to 120Mpx, about 11000x11000px image size.
 - A lot of parameters.
 - Selectable regions and zoom.
@@ -11,6 +10,15 @@
 - Image filters: linear, sqrt, log, ln, exp.
 - Image tint, exposure, visual parameters.
 - Interpolation of the orbits (just for fun): linear, cosine, bicubic.
+
+
+## Display driver stopped responding and has recovered
+
+https://support.microsoft.com/en-us/kb/2665946
+https://msdn.microsoft.com/en-us/library/windows/hardware/ff569918(v=vs.85).aspx
+
+### Fast answer
+Download and activate the "geforce-timeout-path.reg".
 
 
 ## Buddhabrot
@@ -47,14 +55,3 @@ Why not to draw classic figures?
 ...but still 2D
 
 ![Kaliset](https://img-fotki.yandex.ru/get/96932/97637398.e/0_e1f21_f8931d10_orig.jpg)
-
-
-## Display driver stopped responding and has recovered
-
-https://support.microsoft.com/en-us/kb/2665946
-
-
-### Short answer
-1. regedit
-2. HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers
-3. Create: QWORD (64-bit) or DWORD (32-bit) TdrDelay = 8

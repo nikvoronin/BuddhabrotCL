@@ -62,7 +62,7 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
 
         [Category("Fractal")]
         [DisplayName("Grayscale Mode")]
-        public bool IsGrayscale { get; set; } = false;
+        public bool IsGrayscale { get; set; } = true;
         public bool isGrayscale;
         [Category("Fractal")]
         [DisplayName("C-constant")]
@@ -84,7 +84,7 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         public int IterationsMin { get; set; } = 0;
         [Category("Fractal")]
         [DisplayName("Iterations Max")]
-        public int IterationsMax { get; set; } = 2000;
+        public int IterationsMax { get; set; } = 80;
         public int iterMin;
         public int iterMax;
 

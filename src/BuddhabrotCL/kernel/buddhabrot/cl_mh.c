@@ -76,6 +76,7 @@ __kernel void metrohast(
 
 	float rew = reMax - reMin;
 	float imh = imMax - imMin;
+	uint jMax = (uint)(log(4.f / rew + 1.f) * 100.f);
 
 	float r1 = rew * 0.0001f;
 	float r2 = imh * 0.1f;
@@ -86,86 +87,100 @@ __kernel void metrohast(
 
 	float2 c = (float2)(mix(-2.0f, 2.0f, rand.x), mix(-2.0f, 2.0f, rand.y));
 
-	uint isInMSet;
 	int iter = 0;
 	float2 z = 0.0f;
 	iter = 0;
 	z = 0.0f;
 
-	if (!IsInMSet(c, minIter, maxIter, escapeOrbit))
-	{
-		int x, y;
-		iter = 0;
-		z = 0.0f;
-		int i;
+	// Metropolis-Hastings
 
-		uint atscr = 0;
-		while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
+	int x, y;
+	int i;
+
+	// WarmUp
+	uint atscr = 0;
+	while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
+	{
+		z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + c;
+
+		x = (z.x - reMin) * rew * width;
+		y = height - (z.y - imMin) * imh * height;
+
+		if ((iter > minIter) && (x > 0) && (y > 0) && (x < width) && (y < height))
+			atscr++;
+
+		iter++;
+	} // while
+
+	float2 prev_c = c;
+	float prev_contrib = atscr / (float)iter;
+	float prev_iter = iter;
+	uint prev_atscr = atscr;
+	int j = 0;
+	for (j = 0; j < jMax; j++)
+	{
+		// Mutate
+		float2 mutc = prev_c;
+		float q = mix(0.0f, 5.0f, frand(&s1, &s2, &s3));
+		if (q < 4.0f)
 		{
-			z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + c;
+			float a = frand(&s1, &s2, &s3);
+			float b = frand(&s1, &s2, &s3);
+			float phi = a * 2.0f * 3.1415926f;
+			float r = r2 * exp(logreim * b);
+
+			mutc.x += r * cos(phi);
+			mutc.y += r * sin(phi);
+		}
+		else
+		{
+			mutc.x = mix(-2.0f, 2.0f, frand(&s1, &s2, &s3));
+			mutc.y = mix(-2.0f, 2.0f, frand(&s1, &s2, &s3));
+		}
+
+		// Test
+		if (IsInMSet(mutc, minIter, maxIter, escapeOrbit))
+			continue;
+
+		// Evaluate
+		z = 0.0f;
+		uint mut_iter = 0;
+		uint mut_atscr = 0;
+		while ((mut_iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
+		{
+			z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + mutc;
 
 			x = (z.x - reMin) * rew * width;
 			y = height - (z.y - imMin) * imh * height;
 
 			if ((iter > minIter) && (x > 0) && (y > 0) && (x < width) && (y < height))
-			{
-				i = x + (y * width);
-				atscr++;
+				mut_atscr++;
 
-				if (isgrayscale)
-					outputBuffer[i].x++;
-				else
-					if ((iter > minColor.x) && (iter < maxColor.x))
-						outputBuffer[i].x++;
-					else
-						if ((iter > minColor.y) && (iter < maxColor.y))
-							outputBuffer[i].y++;
-						else
-							if ((iter > minColor.z) && (iter < maxColor.z))
-								outputBuffer[i].z++;
-			} // if
-
-			iter++;
+			mut_iter++;
 		} // while
 
-		// Metropolis-Hastings
+		float mut_contrib = mut_atscr / (float)mut_iter;
+		if (mut_contrib == 0.0f)
+			continue; // for j
 
-		int jMax = 100;
-		int j = 0;
-		float2 prev_c = c;
-		float prev_contrib = atscr / (float)iter;
-		float prev_iter = iter;
-		uint prev_atscr = atscr;
-		for (j = 0; j < jMax; j++)
+		// Transition probability
+		float t1 = (1.f - (mut_iter - mut_atscr) / mut_iter) / (1.f - (prev_iter - prev_atscr) / prev_iter);
+		float t2 = (1.f - (prev_iter - prev_atscr) / prev_iter) / (1.f - (mut_iter - mut_atscr) / mut_iter);
+		float alpha = min(1.0f, exp(log(mut_contrib * t1) - log(prev_contrib * t2)));
+		float rnd = frand(&s1, &s2, &s3);
+
+		if (alpha > rnd)
 		{
-			// Mutate
-			float2 mutc = prev_c;
-			float q = mix(0.0f, 5.0f, frand(&s1, &s2, &s3));
-			if (q < 4.0f)
-			{
-				float a = frand(&s1, &s2, &s3);
-				float b = frand(&s1, &s2, &s3);
-				float phi = a * 2.0f * 3.1415926f;
-				float r = r2 * exp(logreim * b);
+			// accept
+			prev_contrib = mut_contrib;
+			prev_iter = mut_iter;
+			prev_atscr = mut_atscr;
+			prev_c = mutc;
 
-				mutc.x += r * cos(phi);
-				mutc.y += r * sin(phi);
-			}
-			else
-			{
-				mutc.x = mix(-2.0f, 2.0f, frand(&s1, &s2, &s3));
-				mutc.y = mix(-2.0f, 2.0f, frand(&s1, &s2, &s3));
-			}
-
-			// Is in M-set
-			if (IsInMSet(mutc, minIter, maxIter, escapeOrbit))
-				continue;
-
-			// Evaluate
+			// draw
+			iter = 0;
 			z = 0.0f;
-			uint mut_iter = 0;
-			uint mut_atscr = 0;
-			while ((mut_iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
+			while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
 			{
 				z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + mutc;
 
@@ -173,61 +188,26 @@ __kernel void metrohast(
 				y = height - (z.y - imMin) * imh * height;
 
 				if ((iter > minIter) && (x > 0) && (y > 0) && (x < width) && (y < height))
-					mut_atscr++;
-
-				mut_iter++;
-			} // while
-
-			float mut_contrib = mut_atscr / (float)mut_iter;
-			if (mut_contrib == 0.0f)
-				continue; // for j
-
-			// Transition probability
-			float t1 = (1.f - (maxIter - mut_iter) / maxIter) / (1.f - (maxIter - prev_iter) / maxIter);
-			float t2 = (1.f - (maxIter - prev_iter) / maxIter) / (1.f - (maxIter - mut_iter) / maxIter);
-			float alpha = min(1.0f, exp(log(mut_contrib * t1) - log(prev_contrib * t2)));
-			float rnd = frand(&s1, &s2, &s3);
-
-			if (alpha > rnd)
-			{
-				// accept
-				prev_contrib = mut_contrib;
-				prev_iter = mut_iter;
-				prev_atscr = mut_atscr;
-				prev_c = mutc;
-
-				// draw
-				iter = 0;
-				z = 0.0f;
-				while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
 				{
-					z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + mutc;
+					i = x + (y * width);
 
-					x = (z.x - reMin) * rew * width;
-					y = height - (z.y - imMin) * imh * height;
-
-					if ((iter > minIter) && (x > 0) && (y > 0) && (x < width) && (y < height))
-					{
-						i = x + (y * width);
-
-						if (isgrayscale)
+					if (isgrayscale)
+						outputBuffer[i].x++;
+					else
+						if ((iter > minColor.x) && (iter < maxColor.x))
 							outputBuffer[i].x++;
 						else
-							if ((iter > minColor.x) && (iter < maxColor.x))
-								outputBuffer[i].x++;
+							if ((iter > minColor.y) && (iter < maxColor.y))
+								outputBuffer[i].y++;
 							else
-								if ((iter > minColor.y) && (iter < maxColor.y))
-									outputBuffer[i].y++;
-								else
-									if ((iter > minColor.z) && (iter < maxColor.z))
-										outputBuffer[i].z++;
-					} // if
+								if ((iter > minColor.z) && (iter < maxColor.z))
+									outputBuffer[i].z++;
+				} // if
 
-					iter++;
-				} // while
-			} // if alpha
-		} // for j
-	} // if isinmset
+				iter++;
+			} // while
+		} // if alpha
+	} // for j
 
 	rngBuffer[id] = (uint4)(s1, s2, s3, 0);
 }

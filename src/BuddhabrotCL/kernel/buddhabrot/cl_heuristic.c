@@ -29,7 +29,7 @@ __kernel void buddhabrot(
     const uint4 maxColor,
     const uint isgrayscale,
 	__global uint4* rngBuffer,
-	__global uint4*  outputBuffer)
+	__global uint4* outputBuffer)
 {
 	int id = get_global_id(0);
 
@@ -44,6 +44,7 @@ __kernel void buddhabrot(
 
 	float rew = reMax - reMin;
 	float imh = imMax - imMin;
+	uint jMax = (uint)(4.f / rew * 100.f);
 
 	float rr = rew / width;
 	float ri = imh / height;
@@ -53,14 +54,14 @@ __kernel void buddhabrot(
 
 	float2 c = (float2)(mix(-2.0f, 2.0f, rand.x), mix(-2.0f, 2.0f, rand.y));
 
-	uint jMax = 100;
+	uint jLim = jMax * 10;
 	float alpha = 0.0f;
 	uint j = 0;
-	uint atscr, lastatscr = 0;
+	uint atscr = 0, lastatscr;
 	uint isInMSet;
 	int iter = 0;
 	float2 z = 0.0f;
-	while((j < jMax) && (j < 500))
+	while((j < jMax) && (j < jLim))
 	{
 		lastatscr = atscr;
 		atscr = 0;
@@ -99,6 +100,7 @@ __kernel void buddhabrot(
 			z = 0.0f;
 			int i;
 
+			// Evaluate
 			while ((iter < maxIter) && ((z.x * z.x + z.y * z.y) < escapeOrbit))
 			{
 				z = (float2)(z.x * z.x - z.y * z.y, (z.x * z.y * 2.0f)) + c;
@@ -132,13 +134,14 @@ __kernel void buddhabrot(
 		// heuristics
 		if (!atscr)
 			break;
-		else 
+		else
 			if (atscr != lastatscr)
 				if (atscr > lastatscr)
-					jMax += 1;
+					jMax *= 1.2f;
 				else
-					jMax -= 3;
+					jMax *= 0.8f;
 
+		// Mutate
 		float q = frand(&s1, &s2, &s3);
 		alpha = q * 2.f * 3.1415926f;
 		c.x += rr * cos(alpha);
