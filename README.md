@@ -14,11 +14,12 @@
 
 ## Display driver stopped responding and has recovered
 
-https://support.microsoft.com/en-us/kb/2665946
+https://support.microsoft.com/en-us/kb/2665946<br/>
 https://msdn.microsoft.com/en-us/library/windows/hardware/ff569918(v=vs.85).aspx
 
 ### Fast answer
-Download and activate the "geforce-timeout-path.reg".
+
+You can download and activate the "tool\geforce-timeout-patch.reg".
 
 
 ## Buddhabrot
