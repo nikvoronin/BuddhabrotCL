@@ -26,13 +26,13 @@ You can download and activate the "tool\geforce-timeout-patch.reg".
 
 Some screenshots are outdated except renders, that still magnificent.
 
-![Buddhabrot](/doc/003.jpg)
+![Buddhabrot](https://cloud.githubusercontent.com/assets/11328666/16513624/ddb64a4a-3f6e-11e6-8caa-8b8baac8a2a2.jpg)
 
-![Zoom to region](/doc/002.jpg)
+![Zoom to region](https://cloud.githubusercontent.com/assets/11328666/16513633/f04544cc-3f6e-11e6-9942-454b540f9a82.jpg)
 
-![Cubic Anti-buddhabrot](/doc/004.jpg)
+![Cubic Anti-buddhabrot](https://cloud.githubusercontent.com/assets/11328666/16513638/f55b4772-3f6e-11e6-8e75-fc8b3538a050.jpg)
 
-![Bicubic interpolation](/doc/001.jpg)
+![Bicubic interpolation](https://cloud.githubusercontent.com/assets/11328666/16513641/f9b44ce2-3f6e-11e6-8ada-915e37c4be15.jpg)
 
 
 ## Classic figures
