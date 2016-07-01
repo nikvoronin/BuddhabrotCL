@@ -251,8 +251,6 @@ namespace BuddhabrotCL
                     if (autoRefresh)
                         UpdateBackBuffer();
 
-                    __should_update = false;
-
                     if (token.IsCancellationRequested)
                         return;
 
@@ -267,19 +265,25 @@ namespace BuddhabrotCL
                                     kernelTimeStatusLabel.Text = $"Core: {ktime}ms {hpet_count}*";
                             }
 
-                            memoryStatusLabel.Text = $"Memory: {(Process.GetCurrentProcess().PrivateMemorySize64 / 1024.0 / 1024.0).ToString("0.00")}Mb";
                             hpet_count = 0;
+
+                            memoryStatusLabel.Text = $"Memory: {(Process.GetCurrentProcess().PrivateMemorySize64 / 1024.0 / 1024.0).ToString("0.00")}Mb";
 
                             TimeSpan ts = TimeSpan.FromMilliseconds(hpet.ElapsedMilliseconds);
                             renderTimeStatusLabel.Text = $"Rendering: {ts.ToString(@"dd\ hh\:mm\:ss")}";
 
                             if (autoRefresh)
                                 drawPanel.Invalidate();
-                        }, null);
-                } // if
+                        }, null); // ui.send
 
-                if(hpet.ElapsedMilliseconds - hpet_ubbb_st < THREAD_PAINT_SLEEP_INTERVAL)
-                    Thread.Sleep(THREAD_PAINT_SLEEP_INTERVAL);
+                    if (hpet.ElapsedMilliseconds - hpet_ubbb_st < THREAD_PAINT_SLEEP_INTERVAL)
+                        Thread.Sleep(THREAD_PAINT_SLEEP_INTERVAL);
+
+                    __should_update = false;
+
+                    if (token.IsCancellationRequested)
+                        return;
+                } // if
             } // while
         }
 
@@ -288,20 +292,26 @@ namespace BuddhabrotCL
         long hpet_count = 0;
         private void Thread_Generator(SynchronizationContext ui, CancellationToken token)
         {
+            hpet_ktime = 0;
+            hpet_count = 0;
             while (!token.IsCancellationRequested)
             {
+                hpet_ktime = Math.Max(hpet_ktime, hpet.ElapsedTicks - hpet_start);
                 hpet_start = hpet.ElapsedTicks;
 
                 render.ExecuteKernel();
                 if (token.IsCancellationRequested) break;
 
-                render.ReadResult();
-                if (token.IsCancellationRequested) break;
+                if (__should_update)
+                    render.FinishKernel();
+                else
+                {
+                    render.ReadResult();
+                    if (token.IsCancellationRequested) break;
+                    __should_update = true;
+                }
 
-                hpet_ktime = hpet.ElapsedTicks - hpet_start;
                 hpet_count++;
-                __should_update = true;
-                Thread.Sleep(0);
             }
         }
 
@@ -354,19 +364,19 @@ namespace BuddhabrotCL
             float maxG = float.MinValue;
             float maxB = float.MinValue;
 
-            int l = render.h_resultBuf.Length;
+            Vector4[] h_resBuf = render.h_resultBuf;
+            int l = h_resBuf.Length;
+
             if (rp.isGrayscale)
                 for (int i = 0; i < l; i++)
-                    maxR = Math.Max(render.h_resultBuf[i].x, maxR);
+                    maxR = Math.Max(h_resBuf[i].x, maxR);
             else
                 for (int i = 0; i < l; i++)
                 {
-                    maxR = Math.Max(render.h_resultBuf[i].x, maxR);
-                    maxG = Math.Max(render.h_resultBuf[i].y, maxG);
-                    maxB = Math.Max(render.h_resultBuf[i].z, maxB);
+                    maxR = Math.Max(h_resBuf[i].x, maxR);
+                    maxG = Math.Max(h_resBuf[i].y, maxG);
+                    maxB = Math.Max(h_resBuf[i].z, maxB);
                 }
-
-            Vector4[] h_resBuf = render.h_resultBuf;
 
             BitmapData bitmapData = backBitmap.LockBits(
                 region,

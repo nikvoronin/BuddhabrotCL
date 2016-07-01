@@ -124,6 +124,10 @@ namespace BuddhabrotCL
             clCommands.Execute(clKernel, null, new long[] { rp.workers }, null, null);
         }
 
+        public void FinishKernel()
+        {
+            clCommands.Finish();
+        }
 
         public void ReadResult()
         {
