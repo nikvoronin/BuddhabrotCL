@@ -1,124 +1,153 @@
 ﻿using System;
-using System.ComponentModel;
+using System.Runtime.InteropServices;
+using Cloo;
 
 namespace BuddhabrotCL
 {
-    public class Render
+    public class Render : IDisposable
     {
-        [Category("OpenCL")]
-        [DisplayName("Workers Count")]
-        public uint Workers { get; set; } = 1000000;
-        public uint workers;
+        public ComputePlatform clPlatform;
+        public ComputeContext clContext;
+        public ComputeContextPropertyList clProperties;
+        public ComputeKernel clKernel;
+        public ComputeProgram clProgram;
+        public ComputeCommandQueue clCommands;
 
-        [Category("View")]
-        [Description(@"ReMin; ReMax; ImMin; ImMax
+        public ComputeBuffer<Vector4> cbuf_Rng;
+        public ComputeBuffer<Vector4> cbuf_Result;
+        public Vector4[] h_resultBuf;
+        private GCHandle gc_resultBuffer;
 
-Try this:
-Deep region 1: -1.05; -0.9; -0.3; -0.225;
-Deep region 2: -1.22; -1.0; 0.16; 0.32;
-Smallbrot: -1.8; -1.73; -0.028; 0.028;
-Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
-        public string Region
+        string kernelFunc = "main";
+
+        RenderParams rp;
+
+        public Render(ComputePlatform cPlatform, string kernelSource, RenderParams rp)
         {
-            get
-            {
-                return $"{ReMin}; {ReMax}; {ImMin}; {ImMax}";
-            }
+            this.rp = rp;
 
-            set
+            clPlatform = cPlatform;
+            clProperties = new ComputeContextPropertyList(clPlatform);
+            clContext = new ComputeContext(clPlatform.Devices, clProperties, null, IntPtr.Zero);
+            clCommands = new ComputeCommandQueue(clContext, clContext.Devices[0], ComputeCommandQueueFlags.None);
+            clProgram = new ComputeProgram(clContext, new string[] { kernelSource });
+
+            h_resultBuf = new Vector4[rp.width * rp.height];
+            gc_resultBuffer = GCHandle.Alloc(h_resultBuf, GCHandleType.Pinned);
+
+            int i = kernelSource.IndexOf("__kernel");
+            if (i > -1)
             {
-                string[] parts = value.Split(';');
-                if (parts.Length == 4)
+                int j = kernelSource.IndexOf("(", i);
+                if (j > -1)
                 {
-                    if (float.TryParse(parts[0], out reMin))
-                        ReMin = reMin;
-                    if (float.TryParse(parts[1], out reMax))
-                        ReMax = reMax;
-                    if (float.TryParse(parts[2], out imMin))
-                        ImMin = imMin;
-                    if (float.TryParse(parts[3], out imMax))
-                        ImMax = imMax;
-                }
-            }
+                    string raw = kernelSource.Substring(i + 8, j - i - 8);
+                    string[] parts = raw.Trim().Split(' ');
+                    for(int k = parts.Length - 1; k != 0; k--)
+                    {
+                        if(!string.IsNullOrEmpty(parts[k]))
+                        {
+                            kernelFunc = parts[k];
+                            break;
+                        } // if
+                    } // for k
+                } // if j
+            } // if i
         }
-        [Category("View")]
-        [DisplayName("Re Min")]
-        public float ReMin { get; set; } = -2f;
-        [Category("View")]
-        [DisplayName("Re Max")]
-        public float ReMax { get; set; } =  2f;
-        [Category("View")]
-        [DisplayName("Im Min")]
-        public float ImMin { get; set; } = -2f;
-        [Category("View")]
-        [DisplayName("Im Max")]
-        public float ImMax { get; set; } =  2f;
-        [Category("View")]
 
-        public float reMin;
-        public float reMax;
-        public float imMin;
-        public float imMax;
-
-        [Category("Fractal")]
-        [DisplayName("Grayscale Mode")]
-        public bool IsGrayscale { get; set; } = true;
-        public bool isGrayscale;
-        [Category("Fractal")]
-        [DisplayName("C-constant")]
-        public Vector2F C { get; set; } = new Vector2F { x = -0.75f, y = 0.27015f };
-        [Category("Fractal")]
-        [DisplayName("Floor Low")]
-        public float Limit_Lo { get; set; } = .33f;
-        [Category("Fractal")]
-        [DisplayName("Floor Mid")]
-        public float Limit_Mid { get; set; } = .66f;
-
-        [Category("Fractal")]
-        [DisplayName("Escape Orbit")]
-        public float EscapeOrbit { get; set; } = 4f;
-        public float escapeOrbit;
-
-        [Category("Fractal")]
-        [DisplayName("Iterations Min")]
-        public int IterationsMin { get; set; } = 0;
-        [Category("Fractal")]
-        [DisplayName("Iterations Max")]
-        public int IterationsMax { get; set; } = 80;
-        public int iterMin;
-        public int iterMax;
-
-        [Category("Image")]
-        public uint Size
+        public void BuildKernels()
         {
-            get {
-                return Math.Max(Width, Height);
+            string msg = null;
+            try
+            {
+                clProgram.Build(null, null, null, IntPtr.Zero);
+                clKernel = clProgram.CreateKernel(kernelFunc);
+            }
+            catch(Exception ex)
+            {
+                msg = ex.Message;
             }
 
-            set {
-                Width = Height = value;
-            }
+            if (clKernel == null)
+                throw new Exception(msg);
         }
-        [Category("Image")]
-        public uint Width { get; set; } = 1000;
-        [Category("Image")]
-        public uint Height { get; set; } = 1000;
-        public int width;
-        public int height;
 
-        public Vector4 minColor;
-        public Vector4 maxColor;
-
-        public void RecalculateColors()
+        public void AllocateBuffers()
         {
-            minColor.x = 0;
-            maxColor.x = (uint)((iterMax - iterMin) * Limit_Lo);
+            Random rnd = new Random((int)DateTime.UtcNow.Ticks);
 
-            minColor.y = maxColor.x;
-            maxColor.y = (uint)(iterMin + (iterMax - iterMin) * Limit_Mid);
+            Vector4[] seeds = new Vector4[rp.workers];
+            for (int i = 0; i < rp.workers; i++)
+                seeds[i] =
+                    new Vector4
+                    {
+                        x = (ushort)rnd.Next(),
+                        y = (ushort)rnd.Next(),
+                        z = (ushort)rnd.Next(),
+                        w = (ushort)rnd.Next()
+                    };
 
-            minColor.z = maxColor.y;
-            maxColor.z = (uint)(iterMax);
+            cbuf_Rng =
+                new ComputeBuffer<Vector4>(
+                    clContext,
+                    ComputeMemoryFlags.ReadOnly | ComputeMemoryFlags.CopyHostPointer,
+                    seeds);
+
+            cbuf_Result =
+                new ComputeBuffer<Vector4>(
+                    clContext,
+                    ComputeMemoryFlags.ReadOnly,
+                    rp.width * rp.height);
+        }
+
+        public void ConfigureKernel()
+        {
+            clKernel.SetValueArgument(0, rp.reMin);
+            clKernel.SetValueArgument(1, rp.reMax);
+            clKernel.SetValueArgument(2, rp.imMin);
+            clKernel.SetValueArgument(3, rp.imMax);
+            clKernel.SetValueArgument(4, (uint)rp.iterMin);
+            clKernel.SetValueArgument(5, (uint)rp.iterMax);
+            clKernel.SetValueArgument(6, (uint)rp.width);
+            clKernel.SetValueArgument(7, (uint)rp.height);
+            clKernel.SetValueArgument(8, rp.escapeOrbit);
+            clKernel.SetValueArgument(9, rp.C.Value);
+            clKernel.SetValueArgument(10, rp.minColor);
+            clKernel.SetValueArgument(11, rp.maxColor);
+            clKernel.SetValueArgument(12, rp.isGrayscale ? 1u : 0u);
+            clKernel.SetMemoryArgument(13, cbuf_Rng);
+            clKernel.SetMemoryArgument(14, cbuf_Result);
+        }
+
+        public void ExecuteKernel()
+        {
+            clCommands.Execute(clKernel, null, new long[] { rp.workers }, null, null);
+        }
+
+
+        public void ReadResult()
+        {
+            clCommands.Read(cbuf_Result, true, 0, rp.width * rp.height, gc_resultBuffer.AddrOfPinnedObject(), null);
+            clCommands.Finish();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                clCommands.Dispose();
+                clKernel.Dispose();
+                clProgram.Dispose();
+                clContext.Dispose();
+                cbuf_Result.Dispose();
+                cbuf_Rng.Dispose();
+            }
         }
     }
 }

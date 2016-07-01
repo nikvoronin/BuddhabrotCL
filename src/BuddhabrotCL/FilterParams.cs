@@ -2,7 +2,7 @@
 
 namespace BuddhabrotCL
 {
-    public class Filter
+    public class FilterParams
     {
         [Category("Filter")]
         public float Factor { get; set; } = 1.0f;

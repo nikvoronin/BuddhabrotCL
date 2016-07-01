@@ -52,9 +52,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Filter.cs" />
+    <Compile Include="FilterParams.cs" />
+    <Compile Include="RenderParams.cs" />
     <Compile Include="Render.cs" />
-    <Compile Include="Buddhabrot.cs" />
     <Compile Include="CanvasPanel.cs">
       <SubType>Component</SubType>
     </Compile>

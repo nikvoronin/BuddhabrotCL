@@ -23,15 +23,15 @@ namespace BuddhabrotCL
 
         string AppFullName = APP_NAME;
 
-        Render bp = new Render();
-        Filter fp = new Filter();
+        RenderParams rp = new RenderParams();
+        FilterParams fp = new FilterParams();
         ComputePlatform cPlatform = null;
         Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.White));
         bool isRunning = false;
         Stopwatch hpet = new Stopwatch();
         bool autoRefresh = true;
 
-        Buddhabrot bb;
+        Render render;
 
         Bitmap backBitmap = null;
         Bitmap frontBitmap = null;
@@ -70,7 +70,7 @@ namespace BuddhabrotCL
             startButton.Enabled = startMenuItem.Enabled = true;
             stopButton.Enabled = stopMenuItem.Enabled = false;
 
-            propertyGrid.SelectedObject = bp;
+            propertyGrid.SelectedObject = rp;
             filterGrid.SelectedObject = fp;
             KernelFilename = kernelFilename;
         }
@@ -160,21 +160,21 @@ namespace BuddhabrotCL
 
         private void TransferBBrotParameters()
         {
-            bp.isGrayscale = bp.IsGrayscale;
-            bp.width = (int)bp.Width;
-            bp.height = (int)bp.Height;
-            bp.iterMax = bp.IterationsMax;
-            bp.iterMin = bp.IterationsMin;
-            bp.escapeOrbit = bp.EscapeOrbit;
+            rp.isGrayscale = rp.IsGrayscale;
+            rp.width = (int)rp.Width;
+            rp.height = (int)rp.Height;
+            rp.iterMax = rp.IterationsMax;
+            rp.iterMin = rp.IterationsMin;
+            rp.escapeOrbit = rp.EscapeOrbit;
 
-            bp.reMin = bp.ReMin;
-            bp.reMax = bp.ReMax;
-            bp.imMin = bp.ImMin;
-            bp.imMax = bp.ImMax;
+            rp.reMin = rp.ReMin;
+            rp.reMax = rp.ReMax;
+            rp.imMin = rp.ImMin;
+            rp.imMax = rp.ImMax;
 
-            bp.workers = bp.Workers;
+            rp.workers = rp.Workers;
 
-            bp.RecalculateColors();
+            rp.RecalculateColors();
         }
 
         private void startButton_Click(object sender, EventArgs e)
@@ -186,11 +186,11 @@ namespace BuddhabrotCL
             {
                 string kernelSource = File.ReadAllText(kernelFilename);
 
-                bb = new Buddhabrot(cPlatform, kernelSource, bp);
+                render = new Render(cPlatform, kernelSource, rp);
 
-                bb.BuildKernels();
-                bb.AllocateBuffers();
-                bb.ConfigureKernel();
+                render.BuildKernels();
+                render.AllocateBuffers();
+                render.ConfigureKernel();
             }
             catch(Exception ex)
             {
@@ -218,9 +218,9 @@ namespace BuddhabrotCL
             }
 
             Graphics g = Graphics.FromHwnd(Handle);
-            backBitmap = new Bitmap(bp.width, bp.height, g);
-            drawPanel.Width = bp.width;
-            drawPanel.Height = bp.height;
+            backBitmap = new Bitmap(rp.width, rp.height, g);
+            drawPanel.Width = rp.width;
+            drawPanel.Height = rp.height;
             frontBitmap = new Bitmap(backBitmap);
 
             cts = new CancellationTokenSource();
@@ -248,9 +248,10 @@ namespace BuddhabrotCL
                 long hpet_ubbb_st = hpet.ElapsedMilliseconds;
                 if (__should_update && ui != null)
                 {
-                    __should_update = false;
                     if (autoRefresh)
                         UpdateBackBuffer();
+
+                    __should_update = false;
 
                     if (token.IsCancellationRequested)
                         return;
@@ -291,10 +292,10 @@ namespace BuddhabrotCL
             {
                 hpet_start = hpet.ElapsedTicks;
 
-                bb.ExecuteKernel_Buddhabrot();
+                render.ExecuteKernel();
                 if (token.IsCancellationRequested) break;
 
-                bb.ReadResult();
+                render.ReadResult();
                 if (token.IsCancellationRequested) break;
 
                 hpet_ktime = hpet.ElapsedTicks - hpet_start;
@@ -353,19 +354,19 @@ namespace BuddhabrotCL
             float maxG = float.MinValue;
             float maxB = float.MinValue;
 
-            int l = bb.h_resultBuf.Length;
-            if (bp.isGrayscale)
+            int l = render.h_resultBuf.Length;
+            if (rp.isGrayscale)
                 for (int i = 0; i < l; i++)
-                    maxR = Math.Max(bb.h_resultBuf[i].x, maxR);
+                    maxR = Math.Max(render.h_resultBuf[i].x, maxR);
             else
                 for (int i = 0; i < l; i++)
                 {
-                    maxR = Math.Max(bb.h_resultBuf[i].x, maxR);
-                    maxG = Math.Max(bb.h_resultBuf[i].y, maxG);
-                    maxB = Math.Max(bb.h_resultBuf[i].z, maxB);
+                    maxR = Math.Max(render.h_resultBuf[i].x, maxR);
+                    maxG = Math.Max(render.h_resultBuf[i].y, maxG);
+                    maxB = Math.Max(render.h_resultBuf[i].z, maxB);
                 }
 
-            Vector4[] h_resBuf = bb.h_resultBuf;
+            Vector4[] h_resBuf = render.h_resultBuf;
 
             BitmapData bitmapData = backBitmap.LockBits(
                 region,
@@ -373,8 +374,8 @@ namespace BuddhabrotCL
                 backBitmap.PixelFormat);
 
             float scaleR = 255f * fp.Exposure / Fx(maxR, fp.Factor);
-            float scaleG = bp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxG, fp.Factor);
-            float scaleB = bp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxB, fp.Factor);
+            float scaleG = rp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxG, fp.Factor);
+            float scaleB = rp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxB, fp.Factor);
 
             int stride = bitmapData.Stride;
             IntPtr Scan0 = bitmapData.Scan0;
@@ -385,12 +386,12 @@ namespace BuddhabrotCL
 
                 for (int y = 0; y < region.Height; y++)
                 {
-                    int ryw = (y + region.Y) * bp.width;
+                    int ryw = (y + region.Y) * rp.width;
                     for (int x = 0; x < region.Width; x++)
                     {
                         int i = x + region.X + ryw;
 
-                        if (bp.isGrayscale)
+                        if (rp.isGrayscale)
                         {
                             argb = ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor));
                             argb |= argb << 8;
@@ -546,7 +547,7 @@ namespace BuddhabrotCL
 
         private void drawPanel_MouseMove(object sender, MouseEventArgs e)
         {
-            if (bb == null)
+            if (render == null)
                 return;
 
             string xstr = ToRe(e.X).ToString("0.00000000").Replace(",", ".");
@@ -598,14 +599,14 @@ namespace BuddhabrotCL
 
         private float ToRe(int x)
         {
-            float dx = x / (float)bp.width;
-            return bp.reMin + (Math.Abs(bp.reMax - bp.reMin)) * dx;
+            float dx = x / (float)rp.width;
+            return rp.reMin + (Math.Abs(rp.reMax - rp.reMin)) * dx;
         }
 
         private float ToIm(int y)
         {
-            float dy = y / (float)bp.height;
-            return bp.imMax - (Math.Abs(bp.imMax - bp.imMin)) * dy;
+            float dy = y / (float)rp.height;
+            return rp.imMax - (Math.Abs(rp.imMax - rp.imMin)) * dy;
         }
 
         private void drawPanel_MouseUp(object sender, MouseEventArgs e)
@@ -620,10 +621,10 @@ namespace BuddhabrotCL
 
                 if (maxl > 0)
                 {
-                    bp.ReMin = ToRe(dragStart.X - maxl);
-                    bp.ReMax = ToRe(dragStart.X + maxl);
-                    bp.ImMin = ToIm(dragStart.Y + maxl);
-                    bp.ImMax = ToIm(dragStart.Y - maxl);
+                    rp.ReMin = ToRe(dragStart.X - maxl);
+                    rp.ReMax = ToRe(dragStart.X + maxl);
+                    rp.ImMin = ToIm(dragStart.Y + maxl);
+                    rp.ImMax = ToIm(dragStart.Y - maxl);
 
                     propertyGrid.Refresh();
 
@@ -636,10 +637,10 @@ namespace BuddhabrotCL
 
         private void fullViewButton_Click(object sender, EventArgs e)
         {
-            bp.ReMin = -2f;
-            bp.ReMax = 2f;
-            bp.ImMin = -2f;
-            bp.ImMax = 2f;
+            rp.ReMin = -2f;
+            rp.ReMax = 2f;
+            rp.ImMin = -2f;
+            rp.ImMax = 2f;
             propertyGrid.Refresh();
 
             if (!isRunning)
@@ -734,8 +735,8 @@ namespace BuddhabrotCL
             if (disposing)
             {
                 dimBrush.Dispose();
-                if (bb != null)
-                    bb.Dispose();
+                if (render != null)
+                    render.Dispose();
             }
         }
     }
