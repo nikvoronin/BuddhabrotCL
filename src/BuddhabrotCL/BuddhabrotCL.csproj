@@ -172,8 +172,17 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="kernel\Classic 2D\cl_burningship.c" />
+    <Content Include="kernel\Classic 2D\cl_burningship.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="kernel\lib\rng\cl_xorshift.h">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="kernel\lib\rng\cl_taus88.h">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

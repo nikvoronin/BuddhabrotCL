@@ -75,23 +75,34 @@ namespace BuddhabrotCL
             KernelFilename = kernelFilename;
         }
 
-        private void KernelDirs(DirectoryInfo parentDirInfo, ToolStripMenuItem parentMenuItem)
+        private int KernelDirs(DirectoryInfo parentDirInfo, ToolStripMenuItem parentMenuItem)
         {
+            int childs = 0;
+
             DirectoryInfo[] dirs = parentDirInfo.GetDirectories("*", SearchOption.TopDirectoryOnly);
+            childs += dirs.Length;
             foreach (DirectoryInfo di in dirs)
             {
-                ToolStripMenuItem dItem = (ToolStripMenuItem)parentMenuItem.DropDownItems.Add(di.Name);
+                ToolStripMenuItem dItem = new ToolStripMenuItem(di.Name);
                 dItem.Image = Resources.folder_horizontal;
-                KernelDirs(di, dItem);
-            }
+                int grandch = KernelDirs(di, dItem);
+                if (grandch > 1)
+                {
+                    childs += grandch;
+                    parentMenuItem.DropDownItems.Add(dItem);
+                }
+            } // foreach
 
             FileInfo[] files = parentDirInfo.GetFiles("cl_*.c", SearchOption.TopDirectoryOnly);
+            childs += files.Length;
             foreach(FileInfo fi in files)
             {
                 ToolStripMenuItem fileItem = (ToolStripMenuItem)parentMenuItem.DropDownItems.Add(fi.Name);
                 fileItem.Tag = fi.FullName;
                 fileItem.Click += kernelsMenuSubItem_Click;
             }
+
+            return childs;
         }
 
         private AppStatus Status
@@ -117,7 +128,7 @@ namespace BuddhabrotCL
                         statusLabel.BackColor = Color.LightGreen;
                         break;
                 }
-            }
+            } // set
         }
 
         private string KernelFilename

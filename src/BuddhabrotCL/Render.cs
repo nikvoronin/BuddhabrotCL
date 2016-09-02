@@ -60,7 +60,7 @@ namespace BuddhabrotCL
             string msg = null;
             try
             {
-                clProgram.Build(null, null, null, IntPtr.Zero);
+                clProgram.Build(null, "-I kernel/lib", null, IntPtr.Zero);
                 clKernel = clProgram.CreateKernel(kernelFunc);
             }
             catch(Exception ex)
