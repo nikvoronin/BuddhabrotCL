@@ -80,13 +80,12 @@ namespace BuddhabrotCL
             int childs = 0;
 
             DirectoryInfo[] dirs = parentDirInfo.GetDirectories("*", SearchOption.TopDirectoryOnly);
-            childs += dirs.Length;
             foreach (DirectoryInfo di in dirs)
             {
                 ToolStripMenuItem dItem = new ToolStripMenuItem(di.Name);
                 dItem.Image = Resources.folder_horizontal;
                 int grandch = KernelDirs(di, dItem);
-                if (grandch > 1)
+                if (grandch > 0)
                 {
                     childs += grandch;
                     parentMenuItem.DropDownItems.Add(dItem);
