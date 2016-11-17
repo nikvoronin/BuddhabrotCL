@@ -25,7 +25,7 @@ namespace BuddhabrotCL
 
         RenderParams rp = new RenderParams();
         FilterParams fp = new FilterParams();
-        ComputePlatform cPlatform = null;
+        ComputeDevice cDevice = null;
         Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.White));
         bool isRunning = false;
         Stopwatch hpet = new Stopwatch();
@@ -51,17 +51,19 @@ namespace BuddhabrotCL
             Text = AppFullName;
 
             foreach (var p in ComputePlatform.Platforms)
-            {
-                ToolStripMenuItem item = (ToolStripMenuItem)platformMenuItem.DropDownItems.Add(p.Name);
-                item.CheckOnClick = false;
-                item.Tag = p;
-                item.Click += platformMenuSubItem_Click;
-            }
+                foreach (var d in p.Devices)
+                {
+                    ToolStripMenuItem item = (ToolStripMenuItem)computeDeviceMenuItem.DropDownItems.Add(d.Name.Trim());
+                    item.CheckOnClick = false;
+                    item.Tag = d;
+                    item.Click += ComputeDeviceMenuSubItem_Click;
+                }
 
-            if (platformMenuItem.HasDropDownItems)
+            if (computeDeviceMenuItem.HasDropDownItems)
             {
-                ((ToolStripMenuItem)platformMenuItem.DropDownItems[0]).Checked = true;
-                Platform = ComputePlatform.Platforms[0];
+                ToolStripMenuItem item = ((ToolStripMenuItem)computeDeviceMenuItem.DropDownItems[0]);
+                item.Checked = true;
+                CDevice = item.Tag as ComputeDevice;
             }
 
             DirectoryInfo di = new DirectoryInfo(DEFAULT_KERNEL_DIR);
@@ -146,25 +148,33 @@ namespace BuddhabrotCL
             KernelFilename = (string)fileItem.Tag;
         }
 
-        private ComputePlatform Platform
+        private ComputeDevice CDevice
         {
             set
             {
-                cPlatform = value;
-                platformStatusLabel.Text = $"{cPlatform.Vendor.Replace(" Corporation","")} {cPlatform.Version}";
+                cDevice = value;
+
+                //platformStatusLabel.Text = $"{cDevice.Platform.Name.Replace(" Corporation", "")} {cDevice.VersionString}";
+
+                const int maxlength = 27;   // empirically
+                string deviceName = cDevice.Name.Trim();
+                if (deviceName.Length > maxlength)
+                    deviceName = deviceName.Substring(0, maxlength) + "...";
+
+                platformStatusLabel.Text = $"{deviceName} {cDevice.VersionString}";
             }
         }
 
-        private void platformMenuSubItem_Click(object sender, EventArgs e)
+        private void ComputeDeviceMenuSubItem_Click(object sender, EventArgs e)
         {
             ToolStripMenuItem item = sender as ToolStripMenuItem;
 
             if (!item.Checked)
             {
-                foreach (ToolStripMenuItem it in platformMenuItem.DropDownItems)
+                foreach (ToolStripMenuItem it in computeDeviceMenuItem.DropDownItems)
                     it.Checked = it == item;
 
-                Platform = item.Tag as ComputePlatform;
+                CDevice = item.Tag as ComputeDevice;
             }
         }
 
@@ -196,7 +206,7 @@ namespace BuddhabrotCL
             {
                 string kernelSource = File.ReadAllText(kernelFilename);
 
-                render = new Render(cPlatform, kernelSource, rp);
+                render = new Render(cDevice, kernelSource, rp);
 
                 render.BuildKernels();
                 render.AllocateBuffers();
@@ -212,7 +222,7 @@ namespace BuddhabrotCL
                 return;
             }
 
-            propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = platformMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = false;
+            propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = computeDeviceMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = false;
             stopButton.Enabled = stopMenuItem.Enabled = true;       
 
             if (backBitmap != null)
@@ -337,7 +347,7 @@ namespace BuddhabrotCL
 
             isRunning = false;
             hpet.Stop();
-            filterGrid.Enabled = propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = platformMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = true;
+            filterGrid.Enabled = propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = computeDeviceMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = true;
             Status = AppStatus.Ready;
         }
 

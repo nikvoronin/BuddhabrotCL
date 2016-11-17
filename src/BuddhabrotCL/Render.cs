@@ -6,7 +6,7 @@ namespace BuddhabrotCL
 {
     public class Render : IDisposable
     {
-        public ComputePlatform clPlatform;
+        public ComputeDevice clDevice;
         public ComputeContext clContext;
         public ComputeContextPropertyList clProperties;
         public ComputeKernel clKernel;
@@ -22,14 +22,14 @@ namespace BuddhabrotCL
 
         RenderParams rp;
 
-        public Render(ComputePlatform cPlatform, string kernelSource, RenderParams rp)
+        public Render(ComputeDevice cDevice, string kernelSource, RenderParams rp)
         {
             this.rp = rp;
 
-            clPlatform = cPlatform;
-            clProperties = new ComputeContextPropertyList(clPlatform);
-            clContext = new ComputeContext(clPlatform.Devices, clProperties, null, IntPtr.Zero);
-            clCommands = new ComputeCommandQueue(clContext, clContext.Devices[0], ComputeCommandQueueFlags.None);
+            clDevice = cDevice;
+            clProperties = new ComputeContextPropertyList(clDevice.Platform);
+            clContext = new ComputeContext(clDevice.Platform.Devices, clProperties, null, IntPtr.Zero);
+            clCommands = new ComputeCommandQueue(clContext, clDevice, ComputeCommandQueueFlags.None);
             clProgram = new ComputeProgram(clContext, new string[] { kernelSource });
 
             h_resultBuf = new Vector4[rp.width * rp.height];

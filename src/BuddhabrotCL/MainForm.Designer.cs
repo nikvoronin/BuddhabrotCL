@@ -59,7 +59,7 @@
             this.startMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stopMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
-            this.platformMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.computeDeviceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.kernelsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.goGithubMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -340,7 +340,7 @@
             this.startMenuItem,
             this.stopMenuItem,
             this.toolStripSeparator6,
-            this.platformMenuItem});
+            this.computeDeviceMenuItem});
             this.renderToolStripMenuItem.Name = "renderToolStripMenuItem";
             this.renderToolStripMenuItem.Size = new System.Drawing.Size(68, 24);
             this.renderToolStripMenuItem.Text = "&Render";
@@ -349,7 +349,7 @@
             // 
             this.startMenuItem.Image = global::BuddhabrotCL.Properties.Resources.control;
             this.startMenuItem.Name = "startMenuItem";
-            this.startMenuItem.Size = new System.Drawing.Size(135, 24);
+            this.startMenuItem.Size = new System.Drawing.Size(188, 24);
             this.startMenuItem.Text = "&Start";
             this.startMenuItem.Click += new System.EventHandler(this.startButton_Click);
             // 
@@ -357,20 +357,20 @@
             // 
             this.stopMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("stopMenuItem.Image")));
             this.stopMenuItem.Name = "stopMenuItem";
-            this.stopMenuItem.Size = new System.Drawing.Size(135, 24);
+            this.stopMenuItem.Size = new System.Drawing.Size(188, 24);
             this.stopMenuItem.Text = "St&op";
             this.stopMenuItem.Click += new System.EventHandler(this.stopButton_Click);
             // 
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(132, 6);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(185, 6);
             // 
             // platformMenuItem
             // 
-            this.platformMenuItem.Name = "platformMenuItem";
-            this.platformMenuItem.Size = new System.Drawing.Size(135, 24);
-            this.platformMenuItem.Text = "&Platform";
+            this.computeDeviceMenuItem.Name = "platformMenuItem";
+            this.computeDeviceMenuItem.Size = new System.Drawing.Size(188, 24);
+            this.computeDeviceMenuItem.Text = "Compute &Device";
             // 
             // kernelsMenuItem
             // 
@@ -525,7 +525,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
-        private System.Windows.Forms.ToolStripMenuItem platformMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem computeDeviceMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openKernelMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
