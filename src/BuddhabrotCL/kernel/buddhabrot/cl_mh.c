@@ -194,13 +194,13 @@ __kernel void metrohast(
 					if (isgrayscale)
 						outputBuffer[i].x++;
 					else
-						if ((iter > minColor.x) && (iter < maxColor.x))
+						if ((iter >= minColor.x) && (iter < maxColor.x))
 							outputBuffer[i].x++;
 						else
-							if ((iter > minColor.y) && (iter < maxColor.y))
+							if ((iter >= minColor.y) && (iter < maxColor.y))
 								outputBuffer[i].y++;
 							else
-								if ((iter > minColor.z) && (iter < maxColor.z))
+								if ((iter >= minColor.z) && (iter < maxColor.z))
 									outputBuffer[i].z++;
 				} // if
 

@@ -7,7 +7,7 @@ namespace BuddhabrotCL
     {
         [Category("OpenCL")]
         [DisplayName("Workers Count")]
-        public uint Workers { get; set; } = 1000000;
+        public uint Workers { get; set; } = 10000;
         public uint workers;
 
         [Category("View")]

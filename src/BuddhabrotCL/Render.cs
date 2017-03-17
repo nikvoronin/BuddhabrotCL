@@ -129,7 +129,7 @@ namespace BuddhabrotCL
             clCommands.Finish();
         }
 
-        public void ReadResult()
+        public void ReadResultAndFinishKernel()
         {
             clCommands.Read(cbuf_Result, true, 0, rp.width * rp.height, gc_resultBuffer.AddrOfPinnedObject(), null);
             clCommands.Finish();

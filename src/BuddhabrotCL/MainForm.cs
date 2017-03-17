@@ -14,7 +14,7 @@ namespace BuddhabrotCL
 {
     public partial class MainForm : Form, IDisposable
     {
-        const string DEFAULT_KERNEL_FILENAME = "/buddhabrot/cl_heuristic.c";
+        const string DEFAULT_KERNEL_FILENAME = "/buddhabrot/cl_mh.c";
         const string DEFAULT_KERNEL_DIR = "kernel";
         const string APP_NAME = "BuddhabrotCL";
         const int CURSOR_DIVW = 10;
@@ -204,6 +204,12 @@ namespace BuddhabrotCL
 
             try
             {
+                if (render != null)
+                {
+                    render.Dispose();
+                    render = null;
+                }
+
                 string kernelSource = File.ReadAllText(kernelFilename);
 
                 render = new Render(cDevice, kernelSource, rp);
@@ -268,6 +274,7 @@ namespace BuddhabrotCL
                 long hpet_ubbb_st = hpet.ElapsedMilliseconds;
                 if (__should_update && ui != null)
                 {
+
                     if (autoRefresh)
                         UpdateBackBuffer();
 
@@ -326,7 +333,7 @@ namespace BuddhabrotCL
                     render.FinishKernel();
                 else
                 {
-                    render.ReadResult();
+                    render.ReadResultAndFinishKernel();
                     if (token.IsCancellationRequested) break;
                     __should_update = true;
                 }
@@ -726,7 +733,7 @@ namespace BuddhabrotCL
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(this, $"{AppFullName}\n\n(c) Nikolai Voronin 2011-2016\nUnder the MIT License (MIT)\n\nhttps://github.com/nikvoronin/BuddhabrotCL", "About");
+            MessageBox.Show(this, $"{AppFullName}\n\n(c) Nikolai Voronin 2011-2017\nUnder the MIT License (MIT)\n\nhttps://github.com/nikvoronin/BuddhabrotCL", "About");
         }
 
         private void goGithubMenuItem_Click(object sender, EventArgs e)
