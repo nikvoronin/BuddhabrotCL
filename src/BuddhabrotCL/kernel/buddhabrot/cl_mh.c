@@ -46,19 +46,19 @@ uint IsInMSet(float2 c, uint minIter, uint maxIter, float escapeOrbit)
 }
 
 __kernel void metrohast(
-    const float reMin,
-    const float reMax,
-    const float imMin,
-    const float imMax,
-    const uint  minIter,
-    const uint  maxIter,
-    const uint  width,
-    const uint  height,
-    const float escapeOrbit,
+	const float reMin,
+	const float reMax,
+	const float imMin,
+	const float imMax,
+	const uint  minIter,
+	const uint  maxIter,
+	const uint  width,
+	const uint  height,
+	const float escapeOrbit,
 	const float2 cc,
-    const uint4 minColor,
-    const uint4 maxColor,
-    const uint isgrayscale,
+	const uint4 minColor,
+	const uint4 maxColor,
+	const uint isgrayscale,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -76,7 +76,7 @@ __kernel void metrohast(
 
 	float rew = reMax - reMin;
 	float imh = imMax - imMin;
-	uint jMax = (uint)(log(4.f / rew + 1.f) * 100.f);
+	int jMax = (int)(log(4.f / rew + 1.f) * 100.f);
 
 	float r1 = rew * 0.0001f;
 	float r2 = imh * 0.1f;
@@ -116,8 +116,7 @@ __kernel void metrohast(
 	float prev_contrib = atscr / (float)iter;
 	float prev_iter = iter;
 	uint prev_atscr = atscr;
-	int j = 0;
-	for (j = 0; j < jMax; j++)
+	for (int j = 0; j < jMax; j++)
 	{
 		// Mutate
 		float2 mutc = prev_c;
@@ -159,9 +158,10 @@ __kernel void metrohast(
 			mut_iter++;
 		} // while
 
-		float mut_contrib = mut_atscr / (float)mut_iter;
-		if (mut_contrib == 0.0f)
+		if (!(mut_atscr && mut_iter))
 			continue; // for j
+
+		float mut_contrib = (float)mut_atscr / (float)mut_iter;
 
 		// Transition probability
 		float t1 = (1.f - (mut_iter - mut_atscr) / mut_iter) / (1.f - (prev_iter - prev_atscr) / prev_iter);
@@ -176,6 +176,7 @@ __kernel void metrohast(
 			prev_iter = mut_iter;
 			prev_atscr = mut_atscr;
 			prev_c = mutc;
+			j--;
 
 			// draw
 			iter = 0;

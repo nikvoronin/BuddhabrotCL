@@ -26,7 +26,7 @@ namespace BuddhabrotCL
         RenderParams rp = new RenderParams();
         FilterParams fp = new FilterParams();
         ComputeDevice cDevice = null;
-        Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.White));
+        Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.CornflowerBlue));
         bool isRunning = false;
         Stopwatch hpet = new Stopwatch();
         bool autoRefresh = true;
@@ -351,6 +351,7 @@ namespace BuddhabrotCL
             await Task.Run(() => { while (thPainter.IsAlive) Thread.Sleep(0); });
 
             UpdateBackBuffer();
+            drawPanel.Invalidate();
 
             isRunning = false;
             hpet.Stop();
