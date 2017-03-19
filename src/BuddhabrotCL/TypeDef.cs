@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using ProtoBuf;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace BuddhabrotCL
@@ -31,11 +32,16 @@ namespace BuddhabrotCL
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    [ProtoContract]
     public struct Vector4
     {
+        [ProtoMember(1)]
         public uint x;
+        [ProtoMember(2)]
         public uint y;
+        [ProtoMember(3)]
         public uint z;
+        [ProtoMember(4)]
         public uint w;
     };
 
@@ -68,4 +74,15 @@ namespace BuddhabrotCL
         public float x;
         public float y;
     };
+
+    [ProtoContract]
+    public class ParameterBox
+    {
+        [ProtoMember(1)]
+        public RenderParams rp = new RenderParams();
+        [ProtoMember(2)]
+        public Vector4[] h_resultBuf;
+
+        public bool ShouldRestore = false;
+    }
 }

@@ -15,25 +15,19 @@ namespace BuddhabrotCL
 
         public ComputeBuffer<Vector4> cbuf_Rng;
         public ComputeBuffer<Vector4> cbuf_Result;
-        public Vector4[] h_resultBuf;
         private GCHandle gc_resultBuffer;
 
         string kernelFunc = "main";
 
         RenderParams rp;
 
-        public Render(ComputeDevice cDevice, string kernelSource, RenderParams rp)
+        public Render(ComputeDevice cDevice, string kernelSource)
         {
-            this.rp = rp;
-
             clDevice = cDevice;
             clProperties = new ComputeContextPropertyList(clDevice.Platform);
             clContext = new ComputeContext(clDevice.Platform.Devices, clProperties, null, IntPtr.Zero);
             clCommands = new ComputeCommandQueue(clContext, clDevice, ComputeCommandQueueFlags.None);
             clProgram = new ComputeProgram(clContext, new string[] { kernelSource });
-
-            h_resultBuf = new Vector4[rp.width * rp.height];
-            gc_resultBuffer = GCHandle.Alloc(h_resultBuf, GCHandleType.Pinned);
 
             int i = kernelSource.IndexOf("__kernel");
             if (i > -1)
@@ -72,8 +66,10 @@ namespace BuddhabrotCL
                 throw new Exception(msg);
         }
 
-        public void AllocateBuffers()
+        public void AllocateBuffers(ParameterBox pbox)
         {
+            rp = pbox.rp;
+
             Random rnd = new Random((int)DateTime.UtcNow.Ticks);
 
             Vector4[] seeds = new Vector4[rp.workers];
@@ -93,11 +89,24 @@ namespace BuddhabrotCL
                     ComputeMemoryFlags.ReadOnly | ComputeMemoryFlags.CopyHostPointer,
                     seeds);
 
-            cbuf_Result =
-                new ComputeBuffer<Vector4>(
-                    clContext,
-                    ComputeMemoryFlags.ReadOnly,
-                    rp.width * rp.height);
+            gc_resultBuffer = GCHandle.Alloc(pbox.h_resultBuf, GCHandleType.Pinned);
+
+            if (pbox.h_resultBuf == null)
+            {
+                cbuf_Result =
+                    new ComputeBuffer<Vector4>(
+                        clContext,
+                        ComputeMemoryFlags.ReadOnly,
+                        rp.width * rp.height);
+            }
+            else
+            {
+                cbuf_Result =
+                    new ComputeBuffer<Vector4>(
+                        clContext,
+                        ComputeMemoryFlags.ReadOnly | ComputeMemoryFlags.CopyHostPointer,
+                        pbox.h_resultBuf);
+            } // elseif
         }
 
         public void ConfigureKernel()

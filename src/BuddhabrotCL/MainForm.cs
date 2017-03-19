@@ -9,12 +9,13 @@ using System.Reflection;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using BuddhabrotCL.Properties;
+using ProtoBuf;
 
 namespace BuddhabrotCL
 {
     public partial class MainForm : Form, IDisposable
     {
-        const string DEFAULT_KERNEL_FILENAME = "/buddhabrot/cl_mh.c";
+        const string DEFAULT_KERNEL_FILENAME = "/buddhabrot/cl_metropolis.c";
         const string DEFAULT_KERNEL_DIR = "kernel";
         const string APP_NAME = "BuddhabrotCL";
         const int CURSOR_DIVW = 10;
@@ -23,13 +24,14 @@ namespace BuddhabrotCL
 
         string AppFullName = APP_NAME;
 
-        RenderParams rp = new RenderParams();
         FilterParams fp = new FilterParams();
         ComputeDevice cDevice = null;
         Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.CornflowerBlue));
         bool isRunning = false;
         Stopwatch hpet = new Stopwatch();
         bool autoRefresh = true;
+
+        ParameterBox pbox = new ParameterBox();
 
         Render render;
 
@@ -72,7 +74,7 @@ namespace BuddhabrotCL
             startButton.Enabled = startMenuItem.Enabled = true;
             stopButton.Enabled = stopMenuItem.Enabled = false;
 
-            propertyGrid.SelectedObject = rp;
+            propertyGrid.SelectedObject = pbox.rp;
             filterGrid.SelectedObject = fp;
             KernelFilename = kernelFilename;
         }
@@ -180,21 +182,21 @@ namespace BuddhabrotCL
 
         private void TransferBBrotParameters()
         {
-            rp.isGrayscale = rp.IsGrayscale;
-            rp.width = (int)rp.Width;
-            rp.height = (int)rp.Height;
-            rp.iterMax = rp.IterationsMax;
-            rp.iterMin = rp.IterationsMin;
-            rp.escapeOrbit = rp.EscapeOrbit;
+            pbox.rp.isGrayscale = pbox.rp.IsGrayscale;
+            pbox.rp.width = (int)pbox.rp.Width;
+            pbox.rp.height = (int)pbox.rp.Height;
+            pbox.rp.iterMax = pbox.rp.IterationsMax;
+            pbox.rp.iterMin = pbox.rp.IterationsMin;
+            pbox.rp.escapeOrbit = pbox.rp.EscapeOrbit;
 
-            rp.reMin = rp.ReMin;
-            rp.reMax = rp.ReMax;
-            rp.imMin = rp.ImMin;
-            rp.imMax = rp.ImMax;
+            pbox.rp.reMin = pbox.rp.ReMin;
+            pbox.rp.reMax = pbox.rp.ReMax;
+            pbox.rp.imMin = pbox.rp.ImMin;
+            pbox.rp.imMax = pbox.rp.ImMax;
 
-            rp.workers = rp.Workers;
+            pbox.rp.workers = pbox.rp.Workers;
 
-            rp.RecalculateColors();
+            pbox.rp.RecalculateColors();
         }
 
         private void startButton_Click(object sender, EventArgs e)
@@ -212,10 +214,15 @@ namespace BuddhabrotCL
 
                 string kernelSource = File.ReadAllText(kernelFilename);
 
-                render = new Render(cDevice, kernelSource, rp);
+                render = new Render(cDevice, kernelSource);
 
                 render.BuildKernels();
-                render.AllocateBuffers();
+
+                if (!pbox.ShouldRestore)
+                    pbox.h_resultBuf = new Vector4[pbox.rp.width * pbox.rp.height];
+                render.AllocateBuffers(pbox);
+                pbox.ShouldRestore = false;
+
                 render.ConfigureKernel();
             }
             catch(Exception ex)
@@ -228,26 +235,10 @@ namespace BuddhabrotCL
                 return;
             }
 
-            propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = computeDeviceMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = false;
-            stopButton.Enabled = stopMenuItem.Enabled = true;       
+            restoreRawDataToolStripMenuItem.Enabled = saveRawDataToolStripMenuItem.Enabled = propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = computeDeviceMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = false;
+            stopButton.Enabled = stopMenuItem.Enabled = true;
 
-            if (backBitmap != null)
-            {
-                backBitmap.Dispose();
-                backBitmap = null;
-            }
-
-            if (frontBitmap != null)
-            {
-                frontBitmap.Dispose();
-                frontBitmap = null;
-            }
-
-            Graphics g = Graphics.FromHwnd(Handle);
-            backBitmap = new Bitmap(rp.width, rp.height, g);
-            drawPanel.Width = rp.width;
-            drawPanel.Height = rp.height;
-            frontBitmap = new Bitmap(backBitmap);
+            RecreateBitmaps();
 
             cts = new CancellationTokenSource();
 
@@ -265,6 +256,27 @@ namespace BuddhabrotCL
             thPainter.Start();
 
             Status = AppStatus.Rendering;
+        }
+
+        private void RecreateBitmaps()
+        {
+            if (backBitmap != null)
+            {
+                backBitmap.Dispose();
+                backBitmap = null;
+            }
+
+            if (frontBitmap != null)
+            {
+                frontBitmap.Dispose();
+                frontBitmap = null;
+            }
+
+            Graphics g = Graphics.FromHwnd(Handle);
+            backBitmap = new Bitmap(pbox.rp.width, pbox.rp.height, g);
+            drawPanel.Width = pbox.rp.width;
+            drawPanel.Height = pbox.rp.height;
+            frontBitmap = new Bitmap(backBitmap);
         }
 
         private void Thread_Painter(SynchronizationContext ui, CancellationToken token)
@@ -326,7 +338,7 @@ namespace BuddhabrotCL
                 hpet_ktime = Math.Max(hpet_ktime, hpet.ElapsedTicks - hpet_start);
                 hpet_start = hpet.ElapsedTicks;
 
-                render.ExecuteKernel();
+                render.ExecuteKernel();                
                 if (token.IsCancellationRequested) break;
 
                 if (__should_update)
@@ -355,7 +367,7 @@ namespace BuddhabrotCL
 
             isRunning = false;
             hpet.Stop();
-            filterGrid.Enabled = propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = computeDeviceMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = true;
+            restoreRawDataToolStripMenuItem.Enabled = saveRawDataToolStripMenuItem.Enabled = filterGrid.Enabled = propertyGrid.Enabled = openKernelMenuItem.Enabled = fullViewMenuItem.Enabled = fullViewButton.Enabled = kernelsMenuItem.Enabled = computeDeviceMenuItem.Enabled = startButton.Enabled = startMenuItem.Enabled = true;
             Status = AppStatus.Ready;
         }
 
@@ -385,17 +397,21 @@ namespace BuddhabrotCL
 
         private void UpdateBackBuffer(Rectangle region)
         {
-            if (backBitmap == null || region.Width == 0 || region.Height == 0)
+            if (backBitmap == null ||
+                region.Width == 0 || region.Height == 0 ||
+                pbox.h_resultBuf == null)
+            {
                 return;
+            }
 
             float maxR = float.MinValue;
             float maxG = float.MinValue;
             float maxB = float.MinValue;
 
-            Vector4[] h_resBuf = render.h_resultBuf;
+            Vector4[] h_resBuf = pbox.h_resultBuf;
             int l = h_resBuf.Length;
 
-            if (rp.isGrayscale)
+            if (pbox.rp.isGrayscale)
                 for (int i = 0; i < l; i++)
                     maxR = Math.Max(h_resBuf[i].x, maxR);
             else
@@ -412,8 +428,8 @@ namespace BuddhabrotCL
                 backBitmap.PixelFormat);
 
             float scaleR = 255f * fp.Exposure / Fx(maxR, fp.Factor);
-            float scaleG = rp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxG, fp.Factor);
-            float scaleB = rp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxB, fp.Factor);
+            float scaleG = pbox.rp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxG, fp.Factor);
+            float scaleB = pbox.rp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxB, fp.Factor);
 
             int stride = bitmapData.Stride;
             IntPtr Scan0 = bitmapData.Scan0;
@@ -424,12 +440,12 @@ namespace BuddhabrotCL
 
                 for (int y = 0; y < region.Height; y++)
                 {
-                    int ryw = (y + region.Y) * rp.width;
+                    int ryw = (y + region.Y) * pbox.rp.width;
                     for (int x = 0; x < region.Width; x++)
                     {
                         int i = x + region.X + ryw;
 
-                        if (rp.isGrayscale)
+                        if (pbox.rp.isGrayscale)
                         {
                             argb = ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor));
                             argb |= argb << 8;
@@ -536,6 +552,8 @@ namespace BuddhabrotCL
                 rect
                 );
 
+            g.DrawRectangle(Pens.White, rect.X, rect.Y, rect.Width - 1, rect.Height - 1);
+
             int cw = rect.Width / CURSOR_DIVW;
             int ch = rect.Height / CURSOR_DIVH;
 
@@ -637,14 +655,14 @@ namespace BuddhabrotCL
 
         private float ToRe(int x)
         {
-            float dx = x / (float)rp.width;
-            return rp.reMin + (Math.Abs(rp.reMax - rp.reMin)) * dx;
+            float dx = x / (float)pbox.rp.width;
+            return pbox.rp.reMin + (Math.Abs(pbox.rp.reMax - pbox.rp.reMin)) * dx;
         }
 
         private float ToIm(int y)
         {
-            float dy = y / (float)rp.height;
-            return rp.imMax - (Math.Abs(rp.imMax - rp.imMin)) * dy;
+            float dy = y / (float)pbox.rp.height;
+            return pbox.rp.imMax - (Math.Abs(pbox.rp.imMax - pbox.rp.imMin)) * dy;
         }
 
         private void drawPanel_MouseUp(object sender, MouseEventArgs e)
@@ -659,10 +677,10 @@ namespace BuddhabrotCL
 
                 if (maxl > 0)
                 {
-                    rp.ReMin = ToRe(dragStart.X - maxl);
-                    rp.ReMax = ToRe(dragStart.X + maxl);
-                    rp.ImMin = ToIm(dragStart.Y + maxl);
-                    rp.ImMax = ToIm(dragStart.Y - maxl);
+                    pbox.rp.ReMin = ToRe(dragStart.X - maxl);
+                    pbox.rp.ReMax = ToRe(dragStart.X + maxl);
+                    pbox.rp.ImMin = ToIm(dragStart.Y + maxl);
+                    pbox.rp.ImMax = ToIm(dragStart.Y - maxl);
 
                     propertyGrid.Refresh();
 
@@ -675,10 +693,10 @@ namespace BuddhabrotCL
 
         private void fullViewButton_Click(object sender, EventArgs e)
         {
-            rp.ReMin = -2f;
-            rp.ReMax = 2f;
-            rp.ImMin = -2f;
-            rp.ImMax = 2f;
+            pbox.rp.ReMin = -2f;
+            pbox.rp.ReMax = 2f;
+            pbox.rp.ImMin = -2f;
+            pbox.rp.ImMax = 2f;
             propertyGrid.Refresh();
 
             if (!isRunning)
@@ -691,6 +709,7 @@ namespace BuddhabrotCL
 
         private void propertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
+            pbox.ShouldRestore = false;
             propertyGrid.Refresh();
         }
 
@@ -777,5 +796,44 @@ namespace BuddhabrotCL
                     render.Dispose();
             }
         }
-    }
+
+        private void saveRawDataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (isRunning || render?.cbuf_Result == null)
+                return;
+
+            Vector4[] h_resBuf = pbox.h_resultBuf;
+
+            if (saveRawDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            using (var rawfile = File.Create(saveRawDialog.FileName))
+            {
+                Serializer.Serialize(rawfile, pbox);
+            }
+        }
+
+        private void restoreRawDataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (isRunning)
+                return;
+
+            if (openRawFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            using (var rawfile = File.OpenRead(openRawFileDialog.FileName))
+            {
+                pbox = Serializer.Deserialize<ParameterBox>(rawfile);
+                propertyGrid.SelectedObject = pbox.rp;
+
+                TransferBBrotParameters();
+                RecreateBitmaps();
+
+                UpdateBackBuffer();
+                drawPanel.Invalidate();
+
+                pbox.ShouldRestore = true;
+            }
+        }
+    } // class
 }

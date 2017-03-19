@@ -17,7 +17,9 @@ __kernel void taus88(
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
-	float2 rand = random2(rngBuffer);
+	uint id = get_global_id(0);
+
+	float2 rand = cl_frand2(id, rngBuffer);
 
 	float2 c = (float2)(mix(0.0f, width - 1.0f, rand.x), mix(0.0f, height - 1.0f, rand.y));
 	uint i = (uint)(c.x + c.y * width);

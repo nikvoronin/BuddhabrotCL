@@ -47,8 +47,10 @@
             this.mainMenu = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openKernelMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.restoreRawDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.saveImageAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveRawDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -72,6 +74,9 @@
             this.kernelTimeStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.renderTimeStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
+            this.saveRawDialog = new System.Windows.Forms.SaveFileDialog();
+            this.openRawFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
@@ -261,8 +266,11 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openKernelMenuItem,
+            this.toolStripSeparator9,
+            this.restoreRawDataToolStripMenuItem,
             this.toolStripSeparator2,
             this.saveImageAsToolStripMenuItem,
+            this.saveRawDataToolStripMenuItem,
             this.toolStripSeparator4,
             this.quitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -272,32 +280,46 @@
             // openKernelMenuItem
             // 
             this.openKernelMenuItem.Name = "openKernelMenuItem";
-            this.openKernelMenuItem.Size = new System.Drawing.Size(184, 24);
+            this.openKernelMenuItem.Size = new System.Drawing.Size(210, 24);
             this.openKernelMenuItem.Text = "&Open Kernel...";
             this.openKernelMenuItem.Click += new System.EventHandler(this.kernelButton_Click);
+            // 
+            // restoreRawDataToolStripMenuItem
+            // 
+            this.restoreRawDataToolStripMenuItem.Name = "restoreRawDataToolStripMenuItem";
+            this.restoreRawDataToolStripMenuItem.Size = new System.Drawing.Size(210, 24);
+            this.restoreRawDataToolStripMenuItem.Text = "&Restore Rendering...";
+            this.restoreRawDataToolStripMenuItem.Click += new System.EventHandler(this.restoreRawDataToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(181, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(207, 6);
             // 
             // saveImageAsToolStripMenuItem
             // 
             this.saveImageAsToolStripMenuItem.Image = global::BuddhabrotCL.Properties.Resources.disks;
             this.saveImageAsToolStripMenuItem.Name = "saveImageAsToolStripMenuItem";
-            this.saveImageAsToolStripMenuItem.Size = new System.Drawing.Size(184, 24);
+            this.saveImageAsToolStripMenuItem.Size = new System.Drawing.Size(210, 24);
             this.saveImageAsToolStripMenuItem.Text = "Save &Image As...";
             this.saveImageAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsImageButton_Click);
+            // 
+            // saveRawDataToolStripMenuItem
+            // 
+            this.saveRawDataToolStripMenuItem.Name = "saveRawDataToolStripMenuItem";
+            this.saveRawDataToolStripMenuItem.Size = new System.Drawing.Size(210, 24);
+            this.saveRawDataToolStripMenuItem.Text = "&Save Rendering As...";
+            this.saveRawDataToolStripMenuItem.Click += new System.EventHandler(this.saveRawDataToolStripMenuItem_Click);
             // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(181, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(207, 6);
             // 
             // quitToolStripMenuItem
             // 
             this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
-            this.quitToolStripMenuItem.Size = new System.Drawing.Size(184, 24);
+            this.quitToolStripMenuItem.Size = new System.Drawing.Size(210, 24);
             this.quitToolStripMenuItem.Text = "&Quit";
             this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
             // 
@@ -366,9 +388,9 @@
             this.toolStripSeparator6.Name = "toolStripSeparator6";
             this.toolStripSeparator6.Size = new System.Drawing.Size(185, 6);
             // 
-            // platformMenuItem
+            // computeDeviceMenuItem
             // 
-            this.computeDeviceMenuItem.Name = "platformMenuItem";
+            this.computeDeviceMenuItem.Name = "computeDeviceMenuItem";
             this.computeDeviceMenuItem.Size = new System.Drawing.Size(188, 24);
             this.computeDeviceMenuItem.Text = "Compute &Device";
             // 
@@ -465,6 +487,24 @@
             this.mainStatusStrip.Size = new System.Drawing.Size(984, 25);
             this.mainStatusStrip.TabIndex = 4;
             // 
+            // saveRawDialog
+            // 
+            this.saveRawDialog.DefaultExt = "bcl184";
+            this.saveRawDialog.Filter = "OpenCL Raw Data (*.bcl184)|*.bcl184";
+            this.saveRawDialog.RestoreDirectory = true;
+            this.saveRawDialog.SupportMultiDottedExtensions = true;
+            // 
+            // openRawFileDialog
+            // 
+            this.openRawFileDialog.DefaultExt = "*.bcl184";
+            this.openRawFileDialog.Filter = "OpenCL Raw Data (*.bcl184)|*.bcl184|All files (*.*)|*.*";
+            this.openRawFileDialog.RestoreDirectory = true;
+            // 
+            // toolStripSeparator9
+            // 
+            this.toolStripSeparator9.Name = "toolStripSeparator9";
+            this.toolStripSeparator9.Size = new System.Drawing.Size(207, 6);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -541,6 +581,11 @@
         private System.Windows.Forms.ToolStripStatusLabel kernelTimeStatusLabel;
         private System.Windows.Forms.ToolStripStatusLabel renderTimeStatusLabel;
         private System.Windows.Forms.StatusStrip mainStatusStrip;
+        private System.Windows.Forms.ToolStripMenuItem saveRawDataToolStripMenuItem;
+        private System.Windows.Forms.SaveFileDialog saveRawDialog;
+        private System.Windows.Forms.OpenFileDialog openRawFileDialog;
+        private System.Windows.Forms.ToolStripMenuItem restoreRawDataToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
     }
 }
 

@@ -1,4 +1,6 @@
-﻿#define pi 3.14159265359
+﻿#include "rng/cl_taus88.h"
+
+#define EPSILON 0.0000001
 
 struct complex {
 	float im;
@@ -95,35 +97,9 @@ __kernel void newton(
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
-	int id = get_global_id(0);
+	uint id = get_global_id(0);
 
-	// taus88
-	uint s1 = rngBuffer[id].x;
-	uint s2 = rngBuffer[id].y;
-	uint s3 = rngBuffer[id].z;
-
-	float2 rand;
-
-	uint b;
-	b = (((s1 << 13) ^ s1) >> 19);
-	s1 = (((s1 & 4294967294) << 12) ^ b);
-	b = (((s2 << 2) ^ s2) >> 25);
-	s2 = (((s2 & 4294967288) << 4) ^ b);
-	b = (((s3 << 3) ^ s3) >> 11);
-	s3 = (((s3 & 4294967280) << 17) ^ b);
-
-	rand.x = (float)((s1 ^ s2 ^ s3) * 2.3283064365e-10);
-
-	b = (((s1 << 13) ^ s1) >> 19);
-	s1 = (((s1 & 4294967294) << 12) ^ b);
-	b = (((s2 << 2) ^ s2) >> 25);
-	s2 = (((s2 & 4294967288) << 4) ^ b);
-	b = (((s3 << 3) ^ s3) >> 11);
-	s3 = (((s3 & 4294967280) << 17) ^ b);
-
-	rand.y = (float)((s1 ^ s2 ^ s3) * 2.3283064365e-10);
-
-	rngBuffer[id] = (uint4)(s1, s2, s3, b);
+	float2 rand = cl_frand2(id, rngBuffer);
 
 	float2 c = (float2)(mix(reMin, reMax, rand.x), mix(imMin, imMax, rand.y));
 
@@ -144,21 +120,20 @@ __kernel void newton(
 
 		z = subComplex(z, divComplex(f, d));
 
-
 		i++;
-		if (compComplex(z, x1, 0.0000001)) {
+		if (compComplex(z, x1, EPSILON)) {
 			p = 1;
 			break;
 		}
-		else if (compComplex(z, x2, 0.0000001)) {
+		else if (compComplex(z, x2, EPSILON)) {
 			p = 2;
 			break;
 		}
-		else if (compComplex(z, x3, 0.0000001)) {
+		else if (compComplex(z, x3, EPSILON)) {
 			p = 3;
 			break;
 		}
-		else if (compComplex(z, x4, 0.0000001)) {
+		else if (compComplex(z, x4, EPSILON)) {
 			p = 4;
 			break;
 		}
@@ -169,6 +144,7 @@ __kernel void newton(
 	int y = height - (c.y - imMin) / (imMax - imMin) * height;
 
 	if ((x > 0) && (y > 0) && (x < width) && (y < height))
+	{
 		switch (p)
 		{
 		case 1:
@@ -179,6 +155,6 @@ __kernel void newton(
 		case 2: outputBuffer[x + y * width].x += i; break;
 		case 3: outputBuffer[x + y * width].y += i; break;
 		case 4: outputBuffer[x + y * width].z += i; break;
-		}
-
+		} // switch
+	} // if
 }

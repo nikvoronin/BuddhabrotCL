@@ -17,7 +17,8 @@ __kernel void burningship(
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
-	float2 rand = random2(rngBuffer);
+	uint id = get_global_id(0);
+	float2 rand = cl_frand2(id, rngBuffer);
 
 	float2 p = (float2)(mix(reMin, reMax, rand.x), mix(imMin, imMax, rand.y));
 	float2 c = p;
