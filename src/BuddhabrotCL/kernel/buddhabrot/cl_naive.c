@@ -15,9 +15,7 @@ __kernel void NaiveBuddhabrot(
     const uint  height,
     const float escapeOrbit,
 	const float2 cc,
-	const uint4 minColor,
-    const uint4 maxColor,
-    const uint isgrayscale,
+	const uint4 limColor,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -44,17 +42,16 @@ __kernel void NaiveBuddhabrot(
 			{
 				i = x + (y * width);
 
-				if (isgrayscale)
+				outputBuffer[i].w++;
+
+				if (iter <= limColor.x)
 					outputBuffer[i].x++;
 				else
-					if ((iter > minColor.x) && (iter < maxColor.x))
-						outputBuffer[i].x++;
+					if ((iter > limColor.x) && (iter < limColor.y))
+						outputBuffer[i].y++;
 					else
-						if ((iter > minColor.y) && (iter < maxColor.y))
-							outputBuffer[i].y++;
-						else
-							if ((iter > minColor.z) && (iter < maxColor.z))
-								outputBuffer[i].z++;
+						if (iter >= limColor.y)
+							outputBuffer[i].z++;
 			} // if
 
 			iter++;

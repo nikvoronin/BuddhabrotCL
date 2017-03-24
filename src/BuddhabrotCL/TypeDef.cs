@@ -81,6 +81,8 @@ namespace BuddhabrotCL
         [ProtoMember(1)]
         public RenderParams rp = new RenderParams();
         [ProtoMember(2)]
+        public FilterParams fp = new FilterParams();
+        [ProtoMember(3)]
         public Vector4[] h_resultBuf;
 
         public bool ShouldRestore = false;

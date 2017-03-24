@@ -14,9 +14,7 @@ __kernel void Kaliset(
 	const uint  height,
 	const float escapeOrbit,
 	const float2 cc,
-	const uint4 minColor,
-	const uint4 maxColor,
-	const uint isgrayscale,
+	const uint4 limColor,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -60,16 +58,15 @@ __kernel void Kaliset(
 		float hk = half_log(0.5) * k;
 		uint color = 5 + iter - hk - half_log(half_log(sqrt(z.x*z.x + z.y*z.y))) * k;
 
-		if (isgrayscale)
+		outputBuffer[i].w+= color;
+
+		if (iter <= limColor.x)
 			outputBuffer[i].x += color;
 		else
-			if ((iter > minColor.x) && (iter < maxColor.x))
-				outputBuffer[i].x += color;
+			if ((iter > limColor.x) && (iter < limColor.y))
+				outputBuffer[i].y += color;
 			else
-				if ((iter > minColor.y) && (iter < maxColor.y))
-					outputBuffer[i].y += color;
-				else
-					if ((iter > minColor.z) && (iter < maxColor.z))
-						outputBuffer[i].z += color;
+				if (iter >= limColor.y)
+					outputBuffer[i].z += color;
 	}
 }

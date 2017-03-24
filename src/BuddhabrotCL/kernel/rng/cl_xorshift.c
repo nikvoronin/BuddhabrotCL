@@ -11,9 +11,7 @@ __kernel void xorshift(
 	const uint  height,
 	const float escapeOrbit,
 	const float2 cc,
-	const uint4 minColor,
-	const uint4 maxColor,
-	const uint isgrayscale,
+	const uint4 limColor,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -26,4 +24,5 @@ __kernel void xorshift(
 	outputBuffer[i].x += 1;
 	outputBuffer[i].y += 1;
 	outputBuffer[i].z += 1;
+	outputBuffer[i].w += 1;
 }

@@ -68,35 +68,34 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
         public float imMax;
 
         [Category("Fractal")]
-        [DisplayName("Grayscale Mode")]
-        [ProtoMember(6)]
-        public bool IsGrayscale { get; set; } = false;
-        public bool isGrayscale;
-        [Category("Fractal")]
         [DisplayName("C-constant")]
         public Vector2F C { get; set; } = new Vector2F { x = -0.75f, y = 0.27015f };
+
         [Category("Fractal")]
-        [DisplayName("Low Color %")]
+        [DisplayName("Low Color")]
+        [Description("Low Color Max Iterations (from Iterations Min to this)")]
+        [ProtoMember(6)]
+        public uint Limit_Lo { get; set; } = 100;
+
+        [Category("Fractal")]
+        [DisplayName("Mid Color")]
+        [Description("Middle Color Max Iterations (from LowColor Max Iterations to this). High Color lies from this to Iterations Max")]
         [ProtoMember(7)]
-        public float Limit_Lo { get; set; } = .33f;
-        [Category("Fractal")]
-        [DisplayName("Mid Color %")]
-        [ProtoMember(8)]
-        public float Limit_Mid { get; set; } = .66f;
+        public uint Limit_Mid { get; set; } = 600;
 
         [Category("Fractal")]
         [DisplayName("Escape Orbit")]
-        [ProtoMember(9)]
+        [ProtoMember(8)]
         public float EscapeOrbit { get; set; } = 4f;
         public float escapeOrbit;
 
         [Category("Fractal")]
         [DisplayName("Iterations Min")]
-        [ProtoMember(10)]
+        [ProtoMember(9)]
         public int IterationsMin { get; set; } = 0;
         [Category("Fractal")]
         [DisplayName("Iterations Max")]
-        [ProtoMember(11)]
+        [ProtoMember(10)]
         public int IterationsMax { get; set; } = 2000;
         public int iterMin;
         public int iterMax;
@@ -113,27 +112,14 @@ Fullbrot: -2.0; 2.0; -2.0; 2.0;")]
             }
         }
         [Category("Image")]
-        [ProtoMember(12)]
+        [ProtoMember(11)]
         public uint Width { get; set; } = 1000;
         [Category("Image")]
-        [ProtoMember(13)]
+        [ProtoMember(12)]
         public uint Height { get; set; } = 1000;
         public int width;
         public int height;
 
-        public Vector4 minColor;
-        public Vector4 maxColor;
-
-        public void RecalculateColors()
-        {
-            minColor.x = 0;
-            maxColor.x = (uint)((iterMax - iterMin) * Limit_Lo);
-
-            minColor.y = maxColor.x;
-            maxColor.y = (uint)(iterMin + (iterMax - iterMin) * Limit_Mid);
-
-            minColor.z = maxColor.y;
-            maxColor.z = (uint)(iterMax);
-        }
+        public Vector4 Color;
     }
 }

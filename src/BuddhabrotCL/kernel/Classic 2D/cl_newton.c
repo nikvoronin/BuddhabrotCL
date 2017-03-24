@@ -91,9 +91,7 @@ __kernel void newton(
 	const uint  height,
 	const float escapeOrbit,
 	const float2 cc,
-	const uint4 minColor,
-	const uint4 maxColor,
-	const uint isgrayscale,
+	const uint4 limColor,
 	__global uint4* rngBuffer,
 	__global uint4*  outputBuffer)
 {
@@ -145,6 +143,7 @@ __kernel void newton(
 
 	if ((x > 0) && (y > 0) && (x < width) && (y < height))
 	{
+		outputBuffer[x + y * width].w += i;
 		switch (p)
 		{
 		case 1:

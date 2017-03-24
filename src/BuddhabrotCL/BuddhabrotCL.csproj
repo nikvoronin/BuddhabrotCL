@@ -94,26 +94,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel\Buddhabrot\Interpolation\cl_linear.c">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="kernel\Buddhabrot\Interpolation\cl_cosine.c">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="kernel\Buddhabrot\Interpolation\cl_bicubic.c">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="kernel\Buddhabrot\Interpolation\cl_anticubic.c">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="kernel\Buddhabrot\cl_antibrot.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -179,6 +159,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="kernel\Classic 2D\cl_burningship.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="kernel\Compatibility\cl_heuristic182.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="kernel\Compatibility\cl_mh182.c">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="kernel\Compatibility\cl_naive182.c">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="kernel\lib\cl_math.h">

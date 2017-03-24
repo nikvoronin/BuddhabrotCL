@@ -1,15 +1,15 @@
 # BuddhabrotCL
 
-- Multicore OpenCL rendering with Metropolis-Hastings kernel.
+- Multicore OpenCL rendering with fast Metropolis-Hastings kernel.
 - Tested on Intel OpenCL 1.2, NVidia OpenCL 1.2 CUDA 8.
 - Open source kernels: buddhabrot, anti-brot, mandelbrot, julia, newton, kaliset. You can write your own and run it.
 - Rendering huge images, up to 120Mpx, about 11000x11000px image size.
 - A lot of parameters.
 - Selectable regions and zoom.
 - RNG inside OpenCL kernel. Tausworthe random number generator by L'Ecuyer.
-- Image filters: linear, sqrt, log, ln, exp.
+- HDR image filters: linear, sqrt, log, ln, exp.
 - Image tint, exposure, visual parameters.
-- Interpolation of the orbits (just for fun): linear, cosine, bicubic.
+- Interpolation of the orbits (just for fun in early versions <= 1.8.4): linear, cosine, bicubic.
 
 
 ## Display driver stopped responding and has recovered

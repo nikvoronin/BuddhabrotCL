@@ -18,13 +18,15 @@ namespace BuddhabrotCL
         const string DEFAULT_KERNEL_FILENAME = "/buddhabrot/cl_metropolis.c";
         const string DEFAULT_KERNEL_DIR = "kernel";
         const string APP_NAME = "BuddhabrotCL";
+        const string RENDERING_RAW_DATA_FILETYPENAME = "BuddhabrotCL Rendering State";
         const int CURSOR_DIVW = 10;
         const int CURSOR_DIVH = 10;
         const int THREAD_PAINT_SLEEP_INTERVAL = 500;
+        const string DEFAULT_FILE_EXT = "bcl";
 
-        string AppFullName = APP_NAME;
+        string appFullName = APP_NAME;
+        string defaultVersionedExt = "bcl";
 
-        FilterParams fp = new FilterParams();
         ComputeDevice cDevice = null;
         Brush dimBrush = new SolidBrush(Color.FromArgb(100, Color.CornflowerBlue));
         bool isRunning = false;
@@ -49,8 +51,13 @@ namespace BuddhabrotCL
             InitializeComponent();
 
             Version v = Assembly.GetExecutingAssembly().GetName().Version;
-            AppFullName = $"{APP_NAME} {v.Major}.{v.Minor}.{v.Build}";
-            Text = AppFullName;
+            appFullName = $"{APP_NAME} {v.Major}.{v.Minor}.{v.Build}";
+            Text = appFullName;
+
+            defaultVersionedExt = $"*.{DEFAULT_FILE_EXT}{v.Major}{v.Minor}{v.Build}";
+            saveRawDialog.DefaultExt = openRawFileDialog.DefaultExt = defaultVersionedExt;
+            openRawFileDialog.Filter = $"{RENDERING_RAW_DATA_FILETYPENAME} ({defaultVersionedExt})|{defaultVersionedExt}|All files (*.*)|*.*";            
+            saveRawDialog.Filter = $"{RENDERING_RAW_DATA_FILETYPENAME} ({defaultVersionedExt})|{defaultVersionedExt}";
 
             foreach (var p in ComputePlatform.Platforms)
                 foreach (var d in p.Devices)
@@ -75,8 +82,9 @@ namespace BuddhabrotCL
             stopButton.Enabled = stopMenuItem.Enabled = false;
 
             propertyGrid.SelectedObject = pbox.rp;
-            filterGrid.SelectedObject = fp;
+            filterGrid.SelectedObject = pbox.fp;
             KernelFilename = kernelFilename;
+            saveRawDataToolStripMenuItem.Enabled = false;
         }
 
         private int KernelDirs(DirectoryInfo parentDirInfo, ToolStripMenuItem parentMenuItem)
@@ -140,7 +148,7 @@ namespace BuddhabrotCL
             {
                 kernelFilename = value;
                 string filename = new FileInfo(kernelFilename).Name;
-                Text = $"{filename} - {AppFullName}";
+                Text = $"{filename} - {appFullName}";
             }
         }
 
@@ -155,8 +163,6 @@ namespace BuddhabrotCL
             set
             {
                 cDevice = value;
-
-                //platformStatusLabel.Text = $"{cDevice.Platform.Name.Replace(" Corporation", "")} {cDevice.VersionString}";
 
                 const int maxlength = 27;   // empirically
                 string deviceName = cDevice.Name.Trim();
@@ -182,7 +188,6 @@ namespace BuddhabrotCL
 
         private void TransferBBrotParameters()
         {
-            pbox.rp.isGrayscale = pbox.rp.IsGrayscale;
             pbox.rp.width = (int)pbox.rp.Width;
             pbox.rp.height = (int)pbox.rp.Height;
             pbox.rp.iterMax = pbox.rp.IterationsMax;
@@ -196,7 +201,13 @@ namespace BuddhabrotCL
 
             pbox.rp.workers = pbox.rp.Workers;
 
-            pbox.rp.RecalculateColors();
+            pbox.rp.Color = new Vector4
+                {
+                    x = pbox.rp.Limit_Lo,
+                    y = pbox.rp.Limit_Mid,
+                    z = 0,
+                    w = 0
+                };
         }
 
         private void startButton_Click(object sender, EventArgs e)
@@ -371,22 +382,30 @@ namespace BuddhabrotCL
             Status = AppStatus.Ready;
         }
 
-        private float Fx(float x, float factor = 1.0f)
+        private float Fx(float x, float factor = 1.0f, float w = 0f)
         {
-            switch (fp.Type)
+            float result = x + w;
+            switch (pbox.fp.Type)
             {                
                 case FxFilter.Sqrt:
-                    return (float)Math.Sqrt(factor * x);                
+                    result = (float)Math.Sqrt(factor * x);
+                    break;
                 case FxFilter.Log:
-                    return (float)Math.Log(factor * x + 1);
+                    result = (float)Math.Log(factor * x + 1);
+                    break;
                 case FxFilter.Log10:
-                    return (float)Math.Log10(factor * x + 1);
+                    result = (float)Math.Log10(factor * x + 1);
+                    break;
                 case FxFilter.Exp:
-                    return 1.0f - (float)Math.Exp(-factor * x);
+                    result = 1.0f - (float)Math.Exp(-factor * x);
+                    break;
                 case FxFilter.Linear:
                 default:
-                    return x * factor;
+                    result = x * factor;
+                    break;
             }
+
+            return result;
         }
 
         private void UpdateBackBuffer()
@@ -407,29 +426,37 @@ namespace BuddhabrotCL
             float maxR = float.MinValue;
             float maxG = float.MinValue;
             float maxB = float.MinValue;
+            float maxW = float.MinValue;
 
             Vector4[] h_resBuf = pbox.h_resultBuf;
             int l = h_resBuf.Length;
 
-            if (pbox.rp.isGrayscale)
+            if (pbox.fp.Grayscale)
+            {
                 for (int i = 0; i < l; i++)
-                    maxR = Math.Max(h_resBuf[i].x, maxR);
+                    maxW = Math.Max(h_resBuf[i].w, maxW);
+            }
             else
+            {
                 for (int i = 0; i < l; i++)
                 {
                     maxR = Math.Max(h_resBuf[i].x, maxR);
                     maxG = Math.Max(h_resBuf[i].y, maxG);
                     maxB = Math.Max(h_resBuf[i].z, maxB);
+                    maxW = Math.Max(h_resBuf[i].w, maxW);
                 }
+            }
 
             BitmapData bitmapData = backBitmap.LockBits(
                 region,
                 ImageLockMode.WriteOnly,
                 backBitmap.PixelFormat);
 
-            float scaleR = 255f * fp.Exposure / Fx(maxR, fp.Factor);
-            float scaleG = pbox.rp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxG, fp.Factor);
-            float scaleB = pbox.rp.isGrayscale ? 0f : 255f * fp.Exposure / Fx(maxB, fp.Factor);
+            float Exp255 = 255f * pbox.fp.Exposure;
+            float scaleW = Exp255 / Fx(maxW, pbox.fp.Factor);
+            float scaleR = pbox.fp.Grayscale ? 0f : Exp255 / Fx(maxR, pbox.fp.Factor);
+            float scaleG = pbox.fp.Grayscale ? 0f : Exp255 / Fx(maxG, pbox.fp.Factor);
+            float scaleB = pbox.fp.Grayscale ? 0f : Exp255 / Fx(maxB, pbox.fp.Factor);
 
             int stride = bitmapData.Stride;
             IntPtr Scan0 = bitmapData.Scan0;
@@ -445,59 +472,35 @@ namespace BuddhabrotCL
                     {
                         int i = x + region.X + ryw;
 
-                        if (pbox.rp.isGrayscale)
+                        float w = h_resBuf[i].w;
+
+                        if (pbox.fp.Grayscale)
                         {
-                            argb = ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor));
+                            argb = ByteClamp(scaleW * Fx(w, pbox.fp.Factor));
                             argb |= argb << 8;
                             argb |= argb << 8;
                             argb |= 0xFF000000;
                         }
                         else
                         {
-                            switch (fp.Tint)
+                            uint r = ByteClamp(scaleR * Fx(h_resBuf[i].x, pbox.fp.Factor, w));
+                            uint g = ByteClamp(scaleG * Fx(h_resBuf[i].y, pbox.fp.Factor, w));
+                            uint b = ByteClamp(scaleB * Fx(h_resBuf[i].z, pbox.fp.Factor, w));
+
+                            switch (pbox.fp.Tint)
                             {
                                 case Tint.RGB:
-                                    argb =
-                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor)) << 16) |
-                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor)) << 8) |
-                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor))) |
-                                        0xFF000000;
-                                    break;
+                                    argb = (r << 16) | (g << 8) | b | 0xFF000000; break;
                                 case Tint.BGR:
-                                    argb =
-                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor)) << 16) |
-                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor)) << 8) |
-                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor))) |
-                                        0xFF000000;
-                                    break;
+                                    argb = (b << 16) | (g << 8) | r | 0xFF000000; break;
                                 case Tint.GRB:
-                                    argb =
-                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor)) << 16) |
-                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor)) << 8) |
-                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor))) |
-                                        0xFF000000;
-                                    break;
+                                    argb = (g << 16) | (r << 8) | b | 0xFF000000; break;
                                 case Tint.GBR:
-                                    argb =
-                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor)) << 16) |
-                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor)) << 8) |
-                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor))) |
-                                        0xFF000000;
-                                    break;
+                                    argb = (g << 16) | (b << 8) | r | 0xFF000000; break;
                                 case Tint.BRG:
-                                    argb =
-                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor)) << 16) |
-                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor)) << 8) |
-                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor))) |
-                                        0xFF000000;
-                                    break;
+                                    argb = (b << 16) | (r << 8) | g | 0xFF000000; break;
                                 case Tint.RBG:
-                                    argb =
-                                        (ByteClamp(scaleR * Fx(h_resBuf[i].x, fp.Factor)) << 16) |
-                                        (ByteClamp(scaleB * Fx(h_resBuf[i].z, fp.Factor)) << 8) |
-                                        (ByteClamp(scaleG * Fx(h_resBuf[i].y, fp.Factor))) |
-                                        0xFF000000;
-                                    break;
+                                    argb = (r << 16) | (b << 8) | g | 0xFF000000; break;
                             }
                         }
 
@@ -753,7 +756,7 @@ namespace BuddhabrotCL
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(this, $"{AppFullName}\n\n(c) Nikolai Voronin 2011-2017\nUnder the MIT License (MIT)\n\nhttps://github.com/nikvoronin/BuddhabrotCL", "About");
+            MessageBox.Show(this, $"{appFullName}\n\n(c) Nikolai Voronin 2011-2017\nUnder the MIT License (MIT)\n\nhttps://github.com/nikvoronin/BuddhabrotCL", "About");
         }
 
         private void goGithubMenuItem_Click(object sender, EventArgs e)
@@ -769,6 +772,7 @@ namespace BuddhabrotCL
                     case "Type":
                     case "Factor":
                     case "Exposure":
+                    case "Grayscale":
                     case "Tint":
                         Status = AppStatus.Polishing;
                         filterGrid.Enabled = propertyGrid.Enabled = startMenuItem.Enabled = startButton.Enabled = false;
@@ -825,6 +829,7 @@ namespace BuddhabrotCL
             {
                 pbox = Serializer.Deserialize<ParameterBox>(rawfile);
                 propertyGrid.SelectedObject = pbox.rp;
+                filterGrid.SelectedObject = pbox.fp;
 
                 TransferBBrotParameters();
                 RecreateBitmaps();

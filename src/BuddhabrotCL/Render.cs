@@ -121,11 +121,9 @@ namespace BuddhabrotCL
             clKernel.SetValueArgument(7, (uint)rp.height);
             clKernel.SetValueArgument(8, rp.escapeOrbit);
             clKernel.SetValueArgument(9, rp.C.Value);
-            clKernel.SetValueArgument(10, rp.minColor);
-            clKernel.SetValueArgument(11, rp.maxColor);
-            clKernel.SetValueArgument(12, rp.isGrayscale ? 1u : 0u);
-            clKernel.SetMemoryArgument(13, cbuf_Rng);
-            clKernel.SetMemoryArgument(14, cbuf_Result);
+            clKernel.SetValueArgument(10, rp.Color);
+            clKernel.SetMemoryArgument(11, cbuf_Rng);
+            clKernel.SetMemoryArgument(12, cbuf_Result);
         }
 
         public void ExecuteKernel()
