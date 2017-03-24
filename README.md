@@ -11,6 +11,8 @@
 - Image tint, exposure, visual parameters.
 - Interpolation of the orbits (just for fun in early versions <= 1.8.4): linear, cosine, bicubic.
 
+![buddhabrotcl_1 8 4](https://cloud.githubusercontent.com/assets/11328666/24295272/faf58216-10aa-11e7-9da3-79591a30aae3.jpg)
+
 
 ## Display driver stopped responding and has recovered
 
